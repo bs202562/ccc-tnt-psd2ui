@@ -52,7 +52,6 @@ const CCPrefabInfo_1 = require("./engine/cc/CCPrefabInfo");
 const CCPrefab_1 = require("./engine/cc/CCPrefab");
 const CCSize_1 = require("./engine/cc/values/CCSize");
 const CCVec2_1 = require("./engine/cc/values/CCVec2");
-const CCLabel_1 = require("./engine/cc/CCLabel");
 const CCLabelOutline_1 = require("./engine/cc/CCLabelOutline");
 const ImageCacheMgr_1 = require("./assets-manager/ImageCacheMgr");
 const EditorVersion_1 = require("./EditorVersion");
@@ -64,6 +63,7 @@ const CCUIOpacity_1 = require("./engine/cc/CCUIOpacity");
 const CCUITransform_1 = require("./engine/cc/CCUITransform");
 const CCVec3_1 = require("./engine/cc/values/CCVec3");
 const Vec3_1 = require("./values/Vec3");
+const CCLabelPlus_1 = require("./engine/cc/CCLabelPlus");
 /***
  * 执行流程
  * - 首次运行，先读取项目文件夹下所有图片资源，进行 md5 缓存
@@ -350,7 +350,7 @@ class Main {
             this.applyConfig(sprite);
         }
         else if (layer instanceof PsdText_1.PsdText) {
-            let label = new CCLabel_1.CCLabel();
+            let label = new CCLabelPlus_1.LabelPlus();
             node.addComponent(label);
             node._color.set(layer.color);
             label._color.set(layer.color);

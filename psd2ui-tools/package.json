@@ -15,7 +15,7 @@
     "test-dpi": "ts-node src/index.ts --engine-version v342 --pinyin --input ./test/dpi-test.psd --output ./out/",
     "test-same-name": "ts-node src/index.ts --engine-version v342 --pinyin --input ./test/sameName.psd --output ./out/ --cache ./cache/cache.json",
     "hawainit": "ts-node src/index.ts --engine-version v342 --init --project-assets D:/work/rumbleHero/newhawaclient/client/assets/res/textures/ui --cache  ./cache/hawacache.json",
-    "tokentest": "ts-node src/index.ts --engine-version v342 --pinyin --input D:/work/tokenRun/tokenRunSvn/Art/UIPSD/Main.psd --config D:/work/tokenRun/tokenRunClient/psd2ui/cache/psd.config.json --output D:/work/tokenRun/tokenRunClient/psd2ui/out/ --cache D:/work/tokenRun/tokenRunClient/psd2ui/cache/tokencache.json"
+    "tokentest": "ts-node src/index.ts --engine-version v342 --pinyin --input D:/work/tokenRun/tokenRunSvn/Art/UIPSD/Main.psd --config D:/work/tokenRun/tokenRunClient/psd2ui/cache/psd.config.json --output D:/work/tokenRun/tokenRunClient/client/assets/res/uiprefabs/TestLocal/ --cache D:/work/tokenRun/tokenRunClient/psd2ui/cache/tokencache.json"
   },
   "author": "",
   "license": "ISC",
