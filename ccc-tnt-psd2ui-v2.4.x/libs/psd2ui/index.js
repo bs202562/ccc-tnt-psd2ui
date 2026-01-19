@@ -875,7 +875,7 @@
             if (typeof buffer === 'string') {
                 buffer = fs__default["default"].readFileSync(buffer);
             }
-            let md5 = crypto__default["default"].createHash("md5").update(buffer).digest("hex");
+            let md5 = crypto__default["default"].createHash("md5").update(new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)).digest("hex");
             return md5;
         }
     }
@@ -950,11 +950,13 @@
             }
             for (let i = 0; i < pngs.length; i++) {
                 const png = pngs[i];
-                let md5 = fileUtils.getMD5(png);
+                fileUtils.getMD5(png);
+                let baseName = path__default["default"].basename(png);
+                let fileName = baseName.split(".")[0];
                 console.log(`ImageCacheMgr->缓存 `, png);
                 let imageWarp = this._loadImageMetaWarp(`${png}.meta`);
                 if (imageWarp) {
-                    this.set(md5, imageWarp);
+                    this.set(fileName, imageWarp);
                 }
             }
         }
@@ -1031,8 +1033,8 @@
             var _a;
             // 不忽略导出图片
             if (!psdImage.isIgnore() && !psdImage.isBind()) {
-                if (!this._imageMapMd5Key.has(psdImage.md5)) {
-                    this._imageMapMd5Key.set(psdImage.md5, psdImage);
+                if (!this._imageMapMd5Key.has(psdImage.name)) {
+                    this._imageMapMd5Key.set(psdImage.name, psdImage);
                 }
             }
             if (typeof ((_a = psdImage.attr.comps.img) === null || _a === void 0 ? void 0 : _a.id) != "undefined") {
@@ -1055,7 +1057,7 @@
         handleSameImgName(psdImage, imgName, idx) {
             if (this._imageMapImgNameKey.has(imgName)) {
                 let _psdImage = this._imageMapImgNameKey.get(imgName);
-                if (_psdImage.md5 != psdImage.md5) {
+                if (_psdImage.name != psdImage.name) {
                     this.handleSameImgName(psdImage, `${psdImage.imgName}_R${idx}`, idx + 1);
                 }
                 else {
@@ -1166,7 +1168,7 @@
             this.scale = new Vec3(1, 1, 1);
         }
         parseNameRule(name) {
-            var _a, _b;
+            var _a, _b, _c;
             if (!name) {
                 return;
             }
@@ -1177,11 +1179,11 @@
                 return;
             }
             let obj = {
-                name: (_b = (_a = fragments[0]) === null || _a === void 0 ? void 0 : _a.replace(/\.|>|\/|\ /g, "_")) !== null && _b !== void 0 ? _b : "unknow",
+                name: (_c = (_b = (_a = fragments[0]) === null || _a === void 0 ? void 0 : _a.trim()) === null || _b === void 0 ? void 0 : _b.replace(/\.|>|\/|\ /g, "_")) !== null && _c !== void 0 ? _c : "unknow",
                 comps: {},
             };
             for (let i = 1; i < fragments.length; i++) {
-                const fragment = fragments[i].trim();
+                const fragment = this.removeChineseFromEnd(fragments[i].trim()).trim(); // 删除规则尾部的中文
                 let attr = {};
                 let startIdx = fragment.indexOf("{");
                 let comp = fragment;
@@ -1254,6 +1256,18 @@
             //     console.warn(`PsdLayer->${obj.name} 同时存在 @full 和 @size`);
             // }
             return obj;
+        }
+        removeChineseFromEnd(inputString) {
+            if (!inputString) {
+                return inputString;
+            }
+            const chineseRegex = /[\u4e00-\u9fa5]+$/;
+            const match = inputString.trim().match(chineseRegex);
+            if (match && match[0]) {
+                const chineseLength = match[0].length;
+                return this.removeChineseFromEnd(inputString.slice(0, -chineseLength));
+            }
+            return inputString;
         }
         /** 解析数据 */
         parseSource() {
@@ -1359,6 +1373,9 @@
             return true;
         }
         resize() {
+            if (!this.children.length) {
+                return;
+            }
             let left = Number.MAX_SAFE_INTEGER;
             let right = Number.MIN_SAFE_INTEGER;
             let top = Number.MAX_SAFE_INTEGER;
@@ -1442,7 +1459,9 @@
                 console.log(`Texture9Utils-> 设置的九宫格 bottom， top 数据不合理，请重新设置`);
                 return _canvas;
             }
-            let newCanvas = canvas__default["default"].createCanvas(Math.min(cw, border.l + border.r + space) || cw, Math.min(ch, border.b + border.t + space) || ch);
+            let imgW = border.l + border.r == 0 ? cw : Math.min(cw, border.l + border.r + space);
+            let imgH = border.b + border.t == 0 ? ch : Math.min(ch, border.b + border.t + space);
+            let newCanvas = canvas__default["default"].createCanvas(imgW, imgH);
             let ctx = newCanvas.getContext("2d");
             // 左上
             ctx.drawImage(_canvas, 0, 0, left + space, top + space, 0, 0, left + space, top + space);
@@ -1534,7 +1553,13 @@
                 }
             }
             this.text = textSource.text;
-            this.fontSize = style.fontSize;
+            // 可能会对文本图层进行缩放，这里计算缩放之后的时机字体大小
+            if (Math.abs(1 - textSource.transform[0]) > 0.001) {
+                this.fontSize = Math.round(style.fontSize * textSource.transform[0] * 100) / 100;
+            }
+            else {
+                this.fontSize = style.fontSize;
+            }
             this.offsetY = config.textOffsetY[this.fontSize] || config.textOffsetY["default"] || 0;
             this.parseSolidFill();
             this.parseStroke();
@@ -1642,8 +1667,8 @@
                         imageMgr.add(image);
                         // 没有设置忽略且不说镜像的情况下才进行缓存
                         if (!image.isIgnore() && !image.isBind()) {
-                            if (!imageCacheMgr.has(image.md5)) {
-                                imageCacheMgr.set(image.md5, {
+                            if (!imageCacheMgr.has(image.name)) {
+                                imageCacheMgr.set(image.name, {
                                     uuid: image.uuid,
                                     textureUuid: image.textureUuid,
                                 });
@@ -1941,6 +1966,176 @@
         cctype("cc.Prefab")
     ], CCPrefab);
 
+    class ExportImageMgr {
+        constructor() {
+            this.textObjects = [];
+        }
+        test() {
+            const outDir = path__default["default"].join(__dirname, "..", "out");
+            let psdPath = "./test-img-only/境界奖励-优化.psd";
+            this.parsePsd(psdPath, outDir);
+        }
+        exec(args) {
+            return __awaiter(this, void 0, void 0, function* () {
+                // 检查参数
+                if (!this.checkArgs(args)) {
+                    return;
+                }
+                // 判断输入是文件夹还是文件
+                let stat = fs__default["default"].lstatSync(args.input);
+                let isDirectory = stat.isDirectory();
+                if (isDirectory) {
+                    if (!args.output) {
+                        args.output = path__default["default"].join(args.input, "psd2ui");
+                    }
+                    this.parsePsdDir(args.input, args.output);
+                }
+                else {
+                    if (!args.output) {
+                        let input_dir = path__default["default"].dirname(args.input);
+                        args.output = path__default["default"].join(input_dir, "psd2ui");
+                    }
+                    this.parsePsd(args.input, args.output);
+                }
+            });
+        }
+        // 检查参数
+        checkArgs(args) {
+            if (!args.input) {
+                console.error(`请设置 --input`);
+                return false;
+            }
+            if (!fs__default["default"].existsSync(args.input)) {
+                console.error(`输入路径不存在: ${args.input}`);
+                return false;
+            }
+            return true;
+        }
+        parsePsdDir(dir, outDir) {
+            return __awaiter(this, void 0, void 0, function* () {
+                // 清空目录
+                fs__default["default"].emptyDirSync(outDir);
+                let psds = fileUtils.filterFile(dir, (fileName) => {
+                    let extname = path__default["default"].extname(fileName);
+                    if (extname == ".psd") {
+                        return true;
+                    }
+                    return false;
+                });
+                for (let i = 0; i < psds.length; i++) {
+                    const element = psds[i];
+                    yield this.parsePsd(element, outDir);
+                }
+            });
+        }
+        parsePsd(psdPath, outDir) {
+            return __awaiter(this, void 0, void 0, function* () {
+                // 每开始一个新的 psd 清理掉上一个 psd 的图
+                imageMgr.clear();
+                this.textObjects.length = 0;
+                console.log(`=========================================`);
+                console.log(`处理 ${psdPath} 文件`);
+                let psdName = path__default["default"].basename(psdPath, ".psd");
+                let buffer = fs__default["default"].readFileSync(psdPath);
+                const psdFile = psd__namespace.readPsd(buffer);
+                let psdRoot = parser.parseLayer(psdFile);
+                psdRoot.name = psdName;
+                let prefabDir = path__default["default"].join(outDir, psdName);
+                let textureDir = path__default["default"].join(prefabDir, "textures");
+                fs__default["default"].mkdirsSync(prefabDir); // 创建预制体根目录
+                fs__default["default"].emptyDirSync(prefabDir);
+                fs__default["default"].mkdirsSync(textureDir); //创建 图片目录
+                yield this.saveImage(textureDir);
+                yield this.saveTextFile(psdRoot, prefabDir);
+                console.log(`psd2ui ${psdPath} 处理完成`);
+            });
+        }
+        saveImage(out) {
+            let images = imageMgr.getAllImage();
+            let idx = 0;
+            images.forEach((psdImage, k) => {
+                // 查找镜像
+                let _layer = imageMgr.getSerialNumberImage(psdImage);
+                let name = `${_layer.imgName}_${idx}`;
+                console.log(`保存图片 [${_layer.imgName}] 重命名为 [${name}] md5: ${_layer.md5}`);
+                let fullpath = path__default["default"].join(out, `${name}.png`);
+                fs__default["default"].writeFileSync(fullpath, new Uint8Array(_layer.imgBuffer.buffer, _layer.imgBuffer.byteOffset, _layer.imgBuffer.byteLength));
+                idx++;
+            });
+        }
+        saveTextFile(psdRoot, out) {
+            this.scanText(psdRoot, psdRoot);
+            let textContent = JSON.stringify(this.textObjects, null, 2);
+            let fullpath = path__default["default"].join(out, `text.txt`);
+            fs__default["default"].writeFileSync(fullpath, textContent, { encoding: "utf-8" });
+        }
+        scanText(layer, psdRoot) {
+            if (layer instanceof PsdGroup) {
+                for (let i = 0; i < layer.children.length; i++) {
+                    const childLayer = layer.children[i];
+                    this.scanText(childLayer, psdRoot);
+                }
+            }
+            else if (layer instanceof PsdText) {
+                let textObj = {
+                    text: layer.text,
+                    fontSize: layer.fontSize,
+                    color: `#${layer.color.toHEX()}`
+                };
+                // 有描边
+                if (layer.outline) {
+                    textObj.outlineWidth = layer.outline.width;
+                    textObj.outlineColor = `#${layer.outline.color.toHEX()}`;
+                }
+                this.textObjects.push(textObj);
+            }
+        }
+        static getInstance() {
+            if (!this._instance) {
+                this._instance = new ExportImageMgr();
+            }
+            return this._instance;
+        }
+    }
+    ExportImageMgr._instance = null;
+    let exportImageMgr = ExportImageMgr.getInstance();
+
+    // 3.4.x
+    let CCUIOpacity = class CCUIOpacity extends CCComponent {
+        constructor() {
+            super(...arguments);
+            this._opacity = 255;
+        }
+        updateWithLayer(psdLayer) {
+        }
+    };
+    __decorate([
+        ccversion(EditorVersion.v342)
+    ], CCUIOpacity.prototype, "_opacity", void 0);
+    CCUIOpacity = __decorate([
+        cctype("cc.UIOpacity")
+    ], CCUIOpacity);
+
+    // 3.4.x
+    let CCUITransform = class CCUITransform extends CCComponent {
+        constructor() {
+            super(...arguments);
+            this._contentSize = new CCSize();
+            this._anchorPoint = new CCVec2(0, 0);
+        }
+        updateWithLayer(psdLayer) {
+        }
+    };
+    __decorate([
+        ccversion(EditorVersion.v342)
+    ], CCUITransform.prototype, "_contentSize", void 0);
+    __decorate([
+        ccversion(EditorVersion.v342)
+    ], CCUITransform.prototype, "_anchorPoint", void 0);
+    CCUITransform = __decorate([
+        cctype("cc.UITransform")
+    ], CCUITransform);
+
     let CCLabel = class CCLabel extends CCComponent {
         constructor() {
             super(...arguments);
@@ -2094,196 +2289,30 @@
         cctype("cc.Label")
     ], CCLabel);
 
-    let CCLabelOutline = class CCLabelOutline extends CCComponent {
+    let LabelPlus = class LabelPlus extends CCLabel {
         constructor() {
             super(...arguments);
-            this._color = new CCColor(255, 255, 255, 255);
-            this._width = 1;
-        }
-        updateWithLayer(psdLayer) {
-            this._width = psdLayer.outline.width;
-            this._color.set(psdLayer.outline.color);
+            this._outline = false;
+            this._outlineThickness = 0.3;
+            this._shadow = false;
+            this._shadowOffset = new Vec2(0, 0);
         }
     };
     __decorate([
         ccversion(EditorVersion.all)
-    ], CCLabelOutline.prototype, "_color", void 0);
+    ], LabelPlus.prototype, "_outline", void 0);
     __decorate([
         ccversion(EditorVersion.all)
-    ], CCLabelOutline.prototype, "_width", void 0);
-    CCLabelOutline = __decorate([
-        cctype("cc.LabelOutline")
-    ], CCLabelOutline);
-
-    class ExportImageMgr {
-        constructor() {
-            this.textObjects = [];
-        }
-        test() {
-            const outDir = path__default["default"].join(__dirname, "..", "out");
-            let psdPath = "./test-img-only/境界奖励-优化.psd";
-            this.parsePsd(psdPath, outDir);
-        }
-        exec(args) {
-            return __awaiter(this, void 0, void 0, function* () {
-                // 检查参数
-                if (!this.checkArgs(args)) {
-                    return;
-                }
-                // 判断输入是文件夹还是文件
-                let stat = fs__default["default"].lstatSync(args.input);
-                let isDirectory = stat.isDirectory();
-                if (isDirectory) {
-                    if (!args.output) {
-                        args.output = path__default["default"].join(args.input, "psd2ui");
-                    }
-                    this.parsePsdDir(args.input, args.output);
-                }
-                else {
-                    if (!args.output) {
-                        let input_dir = path__default["default"].dirname(args.input);
-                        args.output = path__default["default"].join(input_dir, "psd2ui");
-                    }
-                    this.parsePsd(args.input, args.output);
-                }
-            });
-        }
-        // 检查参数
-        checkArgs(args) {
-            if (!args.input) {
-                console.error(`请设置 --input`);
-                return false;
-            }
-            if (!fs__default["default"].existsSync(args.input)) {
-                console.error(`输入路径不存在: ${args.input}`);
-                return false;
-            }
-            return true;
-        }
-        parsePsdDir(dir, outDir) {
-            return __awaiter(this, void 0, void 0, function* () {
-                // 清空目录
-                fs__default["default"].emptyDirSync(outDir);
-                let psds = fileUtils.filterFile(dir, (fileName) => {
-                    let extname = path__default["default"].extname(fileName);
-                    if (extname == ".psd") {
-                        return true;
-                    }
-                    return false;
-                });
-                for (let i = 0; i < psds.length; i++) {
-                    const element = psds[i];
-                    yield this.parsePsd(element, outDir);
-                }
-            });
-        }
-        parsePsd(psdPath, outDir) {
-            return __awaiter(this, void 0, void 0, function* () {
-                // 每开始一个新的 psd 清理掉上一个 psd 的图
-                imageMgr.clear();
-                this.textObjects.length = 0;
-                console.log(`=========================================`);
-                console.log(`处理 ${psdPath} 文件`);
-                let psdName = path__default["default"].basename(psdPath, ".psd");
-                let buffer = fs__default["default"].readFileSync(psdPath);
-                const psdFile = psd__namespace.readPsd(buffer);
-                let psdRoot = parser.parseLayer(psdFile);
-                psdRoot.name = psdName;
-                let prefabDir = path__default["default"].join(outDir, psdName);
-                let textureDir = path__default["default"].join(prefabDir, "textures");
-                fs__default["default"].mkdirsSync(prefabDir); // 创建预制体根目录
-                fs__default["default"].emptyDirSync(prefabDir);
-                fs__default["default"].mkdirsSync(textureDir); //创建 图片目录
-                yield this.saveImage(textureDir);
-                yield this.saveTextFile(psdRoot, prefabDir);
-                console.log(`psd2ui ${psdPath} 处理完成`);
-            });
-        }
-        saveImage(out) {
-            let images = imageMgr.getAllImage();
-            let idx = 0;
-            images.forEach((psdImage, k) => {
-                // 查找镜像
-                let _layer = imageMgr.getSerialNumberImage(psdImage);
-                let name = `${_layer.imgName}_${idx}`;
-                console.log(`保存图片 [${_layer.imgName}] 重命名为 [${name}] md5: ${_layer.md5}`);
-                let fullpath = path__default["default"].join(out, `${name}.png`);
-                fs__default["default"].writeFileSync(fullpath, _layer.imgBuffer);
-                idx++;
-            });
-        }
-        saveTextFile(psdRoot, out) {
-            this.scanText(psdRoot, psdRoot);
-            let textContent = JSON.stringify(this.textObjects, null, 2);
-            let fullpath = path__default["default"].join(out, `text.txt`);
-            fs__default["default"].writeFileSync(fullpath, textContent, { encoding: "utf-8" });
-        }
-        scanText(layer, psdRoot) {
-            if (layer instanceof PsdGroup) {
-                for (let i = 0; i < layer.children.length; i++) {
-                    const childLayer = layer.children[i];
-                    this.scanText(childLayer, psdRoot);
-                }
-            }
-            else if (layer instanceof PsdText) {
-                let textObj = {
-                    text: layer.text,
-                    fontSize: layer.fontSize,
-                    color: `#${layer.color.toHEX()}`
-                };
-                // 有描边
-                if (layer.outline) {
-                    textObj.outlineWidth = layer.outline.width;
-                    textObj.outlineColor = `#${layer.outline.color.toHEX()}`;
-                }
-                this.textObjects.push(textObj);
-            }
-        }
-        static getInstance() {
-            if (!this._instance) {
-                this._instance = new ExportImageMgr();
-            }
-            return this._instance;
-        }
-    }
-    ExportImageMgr._instance = null;
-    let exportImageMgr = ExportImageMgr.getInstance();
-
-    // 3.4.x
-    let CCUIOpacity = class CCUIOpacity extends CCComponent {
-        constructor() {
-            super(...arguments);
-            this._opacity = 255;
-        }
-        updateWithLayer(psdLayer) {
-        }
-    };
+    ], LabelPlus.prototype, "_outlineThickness", void 0);
     __decorate([
-        ccversion(EditorVersion.v342)
-    ], CCUIOpacity.prototype, "_opacity", void 0);
-    CCUIOpacity = __decorate([
-        cctype("cc.UIOpacity")
-    ], CCUIOpacity);
-
-    // 3.4.x
-    let CCUITransform = class CCUITransform extends CCComponent {
-        constructor() {
-            super(...arguments);
-            this._contentSize = new CCSize();
-            this._anchorPoint = new CCVec2(0, 0);
-        }
-        updateWithLayer(psdLayer) {
-        }
-    };
+        ccversion(EditorVersion.all)
+    ], LabelPlus.prototype, "_shadow", void 0);
     __decorate([
-        ccversion(EditorVersion.v342)
-    ], CCUITransform.prototype, "_contentSize", void 0);
-    __decorate([
-        ccversion(EditorVersion.v342)
-    ], CCUITransform.prototype, "_anchorPoint", void 0);
-    CCUITransform = __decorate([
-        cctype("cc.UITransform")
-    ], CCUITransform);
+        ccversion(EditorVersion.all)
+    ], LabelPlus.prototype, "_shadowOffset", void 0);
+    LabelPlus = __decorate([
+        cctype("LabelPlus")
+    ], LabelPlus);
 
     //ag-psd 使用 参考 https://github.com/Agamnentzar/ag-psd/blob/HEAD/README_PSD.md
     /***
@@ -2564,13 +2593,13 @@
                         node._lscale = new CCVec3(layer.scale.x, layer.scale.y, layer.scale.z);
                     }
                     // 使用已缓存的 图片 的 uuid
-                    let imageWarp = imageCacheMgr.get(_layer.md5);
+                    let imageWarp = imageCacheMgr.get(_layer.name);
                     sprite.setSpriteFrame(imageWarp ? imageWarp.textureUuid : _layer.textureUuid);
                 }
                 this.applyConfig(sprite);
             }
             else if (layer instanceof PsdText) {
-                let label = new CCLabel();
+                let label = new LabelPlus();
                 node.addComponent(label);
                 node._color.set(layer.color);
                 label._color.set(layer.color);
@@ -2581,10 +2610,7 @@
                 this.applyConfig(label);
                 // 有描边
                 if (layer.outline) {
-                    let labelOutline = new CCLabelOutline();
-                    node.addComponent(labelOutline);
-                    labelOutline.updateWithLayer(layer);
-                    this.applyConfig(labelOutline);
+                    label._outline = true;
                 }
             }
             // Button / Toggle / ProgressBar
@@ -2619,25 +2645,25 @@
                 // 查找镜像
                 let _layer = imageMgr.getSerialNumberImage(psdImage);
                 // 查找已缓存的相同图像
-                let imageWarp = imageCacheMgr.get(_layer.md5);
+                let imageWarp = imageCacheMgr.get(_layer.name);
                 // 不是强制导出的话，判断是否已经导出过
                 if (!this.isForceImg) {
                     // 判断是否已经导出过相同 md5 的资源，不再重复导出
                     if (imageWarp === null || imageWarp === void 0 ? void 0 : imageWarp.isOutput) {
-                        console.log(`已有相同资源，不再导出 [${psdImage.imgName}]  md5: ${psdImage.md5}`);
+                        console.log(`已有相同资源，不再导出 [${psdImage.imgName}]  md5: ${psdImage.name}`);
                         return;
                     }
                 }
-                console.log(`保存图片 [${_layer.imgName}] md5: ${_layer.md5}`);
+                console.log(`保存图片 [${_layer.imgName}] md5: ${_layer.name}`);
                 imageWarp && (imageWarp.isOutput = true);
                 let fullPath = path__default["default"].join(out, `${_layer.imgName}.png`);
-                fs__default["default"].writeFileSync(fullPath, _layer.imgBuffer);
+                fs__default["default"].writeFileSync(fullPath, new Uint8Array(_layer.imgBuffer.buffer, _layer.imgBuffer.byteOffset, _layer.imgBuffer.byteLength));
                 this.saveImageMeta(_layer, fullPath);
             });
         }
         saveImageMeta(layer, fullPath) {
             let _layer = imageMgr.getSerialNumberImage(layer);
-            let imageWarp = imageCacheMgr.get(_layer.md5);
+            let imageWarp = imageCacheMgr.get(_layer.name);
             if (!imageWarp) {
                 imageWarp = _layer;
             }

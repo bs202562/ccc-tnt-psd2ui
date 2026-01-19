@@ -106,7 +106,7 @@ class FileUtils {
         if(typeof buffer === 'string'){
              buffer = fs.readFileSync(buffer);
         }
-        let md5 = crypto.createHash("md5").update(buffer).digest("hex");
+        let md5 = crypto.createHash("md5").update(new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)).digest("hex");
         return md5;
     }
 }

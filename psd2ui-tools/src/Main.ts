@@ -235,7 +235,7 @@ export class Main {
 
         let psdName = path.basename(psdPath, ".psd");
         let buffer = fs.readFileSync(psdPath);
-        const psdFile = psd.readPsd(buffer)
+        const psdFile = psd.readPsd(buffer as unknown as ArrayBuffer)
         let psdRoot = parser.parseLayer(psdFile) as PsdDocument;
         psdRoot.name = psdName;
         let prefabDir = path.join(outDir, psdName);
@@ -426,7 +426,7 @@ export class Main {
             console.log(`保存图片 [${_layer.imgName}] md5: ${_layer.name}`);
             imageWarp && (imageWarp.isOutput = true);
             let fullPath = path.join(out, `${_layer.imgName}.png`);
-            fs.writeFileSync(fullPath, _layer.imgBuffer);
+            fs.writeFileSync(fullPath, new Uint8Array(_layer.imgBuffer.buffer, _layer.imgBuffer.byteOffset, _layer.imgBuffer.byteLength));
             this.saveImageMeta(_layer, fullPath);
         });
 

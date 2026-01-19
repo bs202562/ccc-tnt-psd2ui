@@ -1,5 +1,8 @@
 
 # psd转预制体
+
+> **Node.js 版本要求**: >= 18.12.0 或 >= 20.9.0 (推荐 22.x LTS)
+
 ### 介绍
 将 psd 转为可以直接在 cocos 中使用的预制体，并导出图片资源。  
 前提是需要在 Photoshop 中根据文档做好图层的处理。  
@@ -29,17 +32,20 @@
 
 
 ### Mac 用户请注意！！！！
-Mac 下首次使用需要先执行根目录下的 `install_depends.sh` 安装 `canvas` 所需要的依赖，如果安装错误 请根据 `https://github.com/Automattic/node-canvas` 手动安装
 
-如果出现 `Bad CPU type in executable canvas` 的报错，按照下面步骤进行处理。
+**Node.js 版本要求**: 本工具需要 Node.js >= 18.12.0 或 >= 20.9.0，推荐使用 Node.js 22.x LTS 版本。
 
-1. 卸载 canvas ，在这个插件目录下执行 `npm uninstall canvas`
-2. 重新安装 canvas，`npm i canvas`
+Mac 下首次使用需要先安装 `canvas` 所需要的依赖，如果安装错误 请根据 `https://github.com/Automattic/node-canvas` 手动安装
 
-如果你 NodeJS 是 16.14.0 版本 ,执行完上面命令之后重新打开插件应该就可以了。
-如果 NodeJS 不是16.14.0 版本，可以使用 nvm 安装一下 16.14.0。
-或者你可以在执行完上面的命令之后，修改一下 libs/psd2ui/command.sh 
-里面 `$(dirname $(dirname $cur_dir))/bin/node` 删除前面的 `$(dirname $(dirname $cur_dir))/bin/` 只保留 node
+**安装步骤**:
+1. 确保已安装 Node.js 22.x（可使用 nvm 管理版本：`nvm install 22`）
+2. 下载 Node.js 22 的 darwin 可执行文件放入 `bin/node`，或者系统已安装 Node 22 会自动使用系统版本
+3. 在插件目录下执行 `npm install` 安装依赖
+
+如果出现 `Bad CPU type in executable canvas` 的报错，按照下面步骤进行处理：
+
+1. 卸载 canvas：`npm uninstall canvas`
+2. 重新安装 canvas：`npm i canvas@^3.2.1`
 
 
 

@@ -24,7 +24,7 @@
     },
     "dependencies": {
         "ag-psd": "^15.0.0",
-        "canvas": "^2.10.2",
+        "canvas": "^3.2.1",
         "fs-extra": "^10.1.0",
         "minimist": "^1.2.7",
         "node-fetch": "^2.7.0",

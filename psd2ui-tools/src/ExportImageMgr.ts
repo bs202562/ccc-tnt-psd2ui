@@ -97,7 +97,7 @@ class ExportImageMgr {
 
         let psdName = path.basename(psdPath, ".psd");
         let buffer = fs.readFileSync(psdPath);
-        const psdFile = psd.readPsd(buffer)
+        const psdFile = psd.readPsd(buffer as unknown as ArrayBuffer)
         let psdRoot = parser.parseLayer(psdFile) as PsdDocument;
         psdRoot.name = psdName;
         let prefabDir = path.join(outDir, psdName);
@@ -121,7 +121,7 @@ class ExportImageMgr {
             let name = `${_layer.imgName}_${idx}`
             console.log(`保存图片 [${_layer.imgName}] 重命名为 [${name}] md5: ${_layer.md5}`);
             let fullpath = path.join(out, `${name}.png`);
-            fs.writeFileSync(fullpath, _layer.imgBuffer);
+            fs.writeFileSync(fullpath, new Uint8Array(_layer.imgBuffer.buffer, _layer.imgBuffer.byteOffset, _layer.imgBuffer.byteLength));
             idx++;
         });
 
