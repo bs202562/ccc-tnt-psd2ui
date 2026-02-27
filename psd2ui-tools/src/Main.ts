@@ -20,6 +20,7 @@ import { CCPrefab } from './engine/cc/CCPrefab';
 import { CCSize } from './engine/cc/values/CCSize';
 import { CCVec2 } from './engine/cc/values/CCVec2';
 import { CCComponent } from './engine/cc/CCComponent';
+import { CCLabel } from './engine/cc/CCLabel';
 import { CCLabelOutline } from './engine/cc/CCLabelOutline';
 import { imageCacheMgr } from './assets-manager/ImageCacheMgr';
 import { EditorVersion } from './EditorVersion';
@@ -31,7 +32,6 @@ import { CCUIOpacity } from './engine/cc/CCUIOpacity';
 import { CCUITransform } from './engine/cc/CCUITransform';
 import { CCVec3 } from './engine/cc/values/CCVec3';
 import { Vec3 } from './values/Vec3';
-import { LabelPlus } from './engine/cc/CCLabelPlus';
 
 
 /***
@@ -353,6 +353,7 @@ export class Main {
                     node._lscale = new CCVec3(layer.scale.x, layer.scale.y, layer.scale.z);
                 }
 
+
                 // 使用已缓存的 图片 的 uuid
                 let imageWarp = imageCacheMgr.get(_layer.name);
                 sprite.setSpriteFrame(imageWarp ? imageWarp.textureUuid : _layer.textureUuid);
@@ -360,7 +361,7 @@ export class Main {
 
             this.applyConfig(sprite);
         } else if (layer instanceof PsdText) {
-            let label = new LabelPlus();
+            let label = new CCLabel();
             node.addComponent(label);
             node._color.set(layer.color);
             label._color.set(layer.color);
@@ -371,7 +372,10 @@ export class Main {
             this.applyConfig(label);
             // 有描边
             if (layer.outline) {
-                label._outline = true;
+                let labelOutline = new CCLabelOutline();
+                node.addComponent(labelOutline);
+                labelOutline.updateWithLayer(layer);
+                this.applyConfig(labelOutline);
             }
         }
 
