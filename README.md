@@ -3,16 +3,16 @@
 
 > **Node.js 版本要求**: >= 18.12.0 或 >= 20.9.0 (推荐 22.x LTS)
 
-本仓库提供 4 个**纯命令行**工具，覆盖 PSD ↔ 引擎 UI 的双向转换：
+本仓库提供 4 个**纯命令行**工具，两两组成 Cocos / Godot 各自的双向转换：
 
-| 工具 | 作用 |
-| --- | --- |
-| [`psd2prefab/`](./psd2prefab) | PSD → Cocos Creator 3.4+（兼容 2.4.x）`.prefab` + `.png` + `.meta` |
-| [`prefab2psd/`](./prefab2psd) | Cocos `.prefab` → PSD（图片嵌入 + sidecar JSON 记录挂载信息） |
-| [`psd2tscn/`](./psd2tscn) | PSD → Godot 4 `.tscn` + `.png` + `.png.import` |
-| [`tscn2psd/`](./tscn2psd) | Godot `.tscn` → PSD（图片嵌入 + sidecar JSON 记录节点属性） |
+| 引擎 | 正向 (PSD → 资源) | 反向 (资源 → PSD) |
+| --- | --- | --- |
+| Cocos Creator 3.4+（兼容 2.4.x） | [`psd2prefab/`](./psd2prefab)：`.prefab` + `.png` + `.meta` | [`prefab2psd/`](./prefab2psd)：图片嵌入 + sidecar JSON 记录挂载信息 |
+| Godot 4 | [`psd2tscn/`](./psd2tscn)：`.tscn` + `.png` + `.png.import` | [`tscn2psd/`](./tscn2psd)：图片嵌入 + sidecar JSON 记录节点属性 |
 
-> 历史上本仓库提供过 Cocos Creator 编辑器插件（`ccc-tnt-psd2ui-v3.4.+` / `ccc-tnt-psd2ui-v2.4.x`），现已移除，统一改为命令行调用 `psd2prefab/` 这条路径。
+四个工具共用同一套 `@xxx` 图层名约定（见下文），让一份 PSD 可以同时面向 Cocos 与 Godot。
+
+> 历史上本仓库提供过 Cocos Creator 编辑器插件（`ccc-tnt-psd2ui-v3.4.+` / `ccc-tnt-psd2ui-v2.4.x`），现已移除，统一改为命令行调用 `psd2prefab/` 这条路径。Cocos 2.4.x 的 prefab 输出仍可用 `psd2prefab --engine-version v249` 生成。
 
 ### 通用安装
 
@@ -31,7 +31,7 @@ npm run build      # 仅 psd2prefab/ 需要（需要先编译 TypeScript）
 
 具体用法 / 参数 / 输出结构请进各自子目录的 README。
 
-下面的图层名约定（`@xxx`）四个工具共用 —— 这是从 PSD 端约定一套节点元数据，让 PSD 与 Cocos / Godot 都能解释。
+下面的图层名约定（`@xxx`）四个工具共用 —— 这是从 PSD 端约定一套节点元数据，让 PSD 与 Cocos / Godot 都能解释。Cocos 路径覆盖全部约定；Godot 路径目前覆盖 `@Btn` / `@Toggle` / `@ProgressBar` / `@.9` / `@ar` / `@full` / `@flip` / `@flipX` / `@flipY` / `@ignore*`，少数标签（如 `@img{bind:N}` 的高级绑定）仅在 Cocos 路径完全实现，详见各子工具 README。
 
 ### 属性
 
@@ -122,6 +122,7 @@ check 为 Toggle 的属性，类型为 Sprite
         不填写则默认为 0
 ```
 
+<a id="ar"></a>
 ```
 @ar{x:0,y:0}
 
@@ -337,24 +338,7 @@ cc3.7.x 可以配置为
 ```
 
 ## 已知bug
-使用 强制导出图片选项时，输入为多个 psd 或含有多个 psd 文件的文件夹时，如果在不同 psd 含有相同 md5 的图像，则会在各自目录下生成相同 uuid 的图片
-
-
-## PS脚本
-这里提供了一个图层重命名的 PS 脚本，可以批量对图层进行命名  
-
-使用方式有两种：
-1. 将脚本放入 PhotoShop文件夹中的 `\Presets\Scripts` 文件夹下，然后在 `Photoshop左上角-> 文件 -> 脚本-> PS脚本-图层重命名` 就行看到
-2. 脚本放在任意位置，然后在 `Photoshop左上角-> 文件 -> 脚本-> 浏览` 在打开的选择文件弹窗选择找到我们的脚本
-
-然后根据需求填入参数就行了
-
-隐藏功能：
-> 【替换】 选项可以实现批量替换  
-> 例如有5个图层：  头，身体，手臂，手掌，大腿  
-> 则界面上填入  
-> 把：头,身体,手臂,手掌,大腿  
-> 替换为：head,body,arm,palm,thigh
+传 `--force-img` 时，如果同一次调用里多张 PSD（或目录里多个 PSD）含有相同 md5 的图层，会在各自输出目录下生成相同 uuid 的图片，需要手动取舍。
 
 
 <font size=5 ><b> 
