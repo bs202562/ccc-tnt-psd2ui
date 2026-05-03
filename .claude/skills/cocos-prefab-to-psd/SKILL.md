@@ -30,7 +30,7 @@ npm install   # pulls ag-psd, canvas (native), fs-extra, minimist
 A Windows trick: if you're working in this repo and `prefab2psd/node_modules` doesn't exist, you can junction it from a sibling tool that already has it:
 
 ```powershell
-cmd /c "mklink /J D:\path\to\prefab2psd\node_modules D:\path\to\godot-psd2tscn\node_modules"
+cmd /c "mklink /J D:\path\to\prefab2psd\node_modules D:\path\to\psd2tscn\node_modules"
 ```
 
 (Same deps; saves a `npm install`.)

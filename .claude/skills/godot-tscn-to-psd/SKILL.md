@@ -24,7 +24,7 @@ cd tscn2psd
 npm install   # ag-psd, canvas (native), fs-extra, minimist
 ```
 
-If `prefab2psd/node_modules` (or `godot-psd2tscn/node_modules`) already exists, you can junction it:
+If `prefab2psd/node_modules` (or `psd2tscn/node_modules`) already exists, you can junction it:
 
 ```powershell
 cmd /c "mklink /J D:\path\to\tscn2psd\node_modules D:\path\to\prefab2psd\node_modules"

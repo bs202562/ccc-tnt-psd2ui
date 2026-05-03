@@ -6,7 +6,7 @@ Godot **4** `.tscn` 反向导出 PSD 工具。
 sidecar JSON 完整记录节点类型、属性、ext_resource / sub_resource 引用，
 方便后续把 PSD 再次导回 `.tscn` 时尽量恢复。
 
-> 与 [`godot-psd2tscn`](../godot-psd2tscn) 镜像，独立 Node CLI，无 Godot
+> 与 [`psd2tscn`](../psd2tscn) 镜像，独立 Node CLI，无 Godot
 > 编辑器依赖；图层名约定也沿用同一套（`@Btn` / `@.9` / `@flipX` 等）。
 
 ---

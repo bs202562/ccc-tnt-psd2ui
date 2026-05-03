@@ -2,7 +2,7 @@
 
 Photoshop `.psd` → Cocos Creator **3.4+**（向下兼容 2.4.x）`.prefab` + `.png` + `.png.meta` 的独立 Node CLI。
 
-> 本工具是 [`ccc-tnt-psd2ui`](https://gitee.com/onvia/ccc-tnt-psd2ui) Cocos 编辑器插件的命令行版本——剥离了所有编辑器壳，只留下 PSD 解析与 prefab 生成的核心引擎。和 `prefab2psd / tscn2psd / godot-psd2tscn` 同一目录组下，统一通过命令行使用。
+> 本工具是 [`ccc-tnt-psd2ui`](https://gitee.com/onvia/ccc-tnt-psd2ui) Cocos 编辑器插件的命令行版本——剥离了所有编辑器壳，只留下 PSD 解析与 prefab 生成的核心引擎。和 `prefab2psd / psd2tscn / tscn2psd` 同一目录组下，统一通过命令行使用。
 
 ---
 

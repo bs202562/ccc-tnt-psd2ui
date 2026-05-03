@@ -1,9 +1,9 @@
 # psd2tscn — PSD → Godot 4 .tscn (CLI)
 
-把 Photoshop `.psd` 转成 Godot 4 的 `.tscn` 场景（Control 节点树）+ `.png` + `.png.import`。**纯命令行工具**，不依赖 CocosCreator，也不在 Godot 编辑器内运行。图层名约定沿用上层 `ccc-tnt-psd2ui` 项目（`@Btn`、`@.9`、`@ar` 等）。
+把 Photoshop `.psd` 转成 Godot 4 的 `.tscn` 场景（Control 节点树）+ `.png` + `.png.import`。**纯命令行工具**，不依赖 CocosCreator，也不在 Godot 编辑器内运行。图层名约定与同仓库的 `psd2prefab` 一致（`@Btn`、`@.9`、`@ar` 等）。
 
 ```
-godot-psd2tscn/
+psd2tscn/
 ├── README.md
 ├── package.json              ← npm 依赖清单
 ├── psd2tscn.js               ← Node CLI 主程序
@@ -19,7 +19,7 @@ godot-psd2tscn/
 **前提**：Node.js 16+。
 
 ```
-cd godot-psd2tscn
+cd psd2tscn
 npm install
 ```
 
@@ -60,7 +60,7 @@ node psd2tscn.js \
                     必须配合 --godot-project 与 --cache 一起用
 --force-img         强制导出图片，即使缓存里已有
 --pinyin            把图层名里的中文转拼音（推荐打开，避免 res:// 路径里有中文）
---img-only          只切图，不生成 .tscn（兼容上游 ccc-tnt-psd2ui 行为）
+--img-only          只切图，不生成 .tscn（兼容 psd2prefab 行为）
 --config            psd.config.json 路径，用于配置默认字体等（见下文）
 
 短别名:
@@ -165,7 +165,7 @@ PSD 不嵌入字体，所以 Godot 这边必须有真实的 `.ttf/.otf` 资源�
 - **NinePatchRect 不支持 `flip_h/flip_v`**：`@.9 + @flip` 会忽略 flip。
 - **`@Btn + @.9`**：`TextureButton` 不支持 9-patch，patch_margin 被剥掉，warn。
 - **`@Toggle` 自定义贴图**：不会自动接到 `CheckBox` theme，需手动调整。
-- **缓存按 layer name 去重，不按 MD5**：与上层 `ccc-tnt-psd2ui` 实际行为一致（README 描述为 MD5，但实现就是 layer name）。
+- **缓存按 layer name 去重，不按 MD5**：与 `psd2prefab` 实际行为一致（README 描述为 MD5，但实现就是 layer name）。
 - **只支持单一默认字体**：所有 Label 用同一字体，PSD 里多种字体会被替换成默认。
 - **不支持加粗 / 斜体 PSD 样式 → Godot FontVariation**。
 
@@ -173,7 +173,7 @@ PSD 不嵌入字体，所以 Godot 这边必须有真实的 `.ttf/.otf` 资源�
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `Cannot find module 'ag-psd'` | 没跑 `npm install`，或 cwd 不是本目录。`cd` 进 `godot-psd2tscn/` 再 `npm install` |
+| `Cannot find module 'ag-psd'` | 没跑 `npm install`，或 cwd 不是本目录。`cd` 进 `psd2tscn/` 再 `npm install` |
 | `canvas` 编译失败 | 缺 C++ 工具链。看上文 "一次性安装" 章节 |
 | `输入路径不存在` | `--input` 写错了。Windows 下注意路径分隔符与引号 |
 | Godot 提示 "字体导入文件不存在" | `.ttf` 还没被 Godot import；先在 Godot 里打开项目让它扫一遍 |
@@ -182,4 +182,4 @@ PSD 不嵌入字体，所以 Godot 这边必须有真实的 `.ttf/.otf` 资源�
 
 ## 来源 / 致谢
 
-本工具是从 `ccc-tnt-psd2ui` (https://gitee.com/onvia/ccc-tnt-psd2ui) 派生出的 Godot 输出版本。PSD 解析、图层规则、`@xxx` 标签解析全部沿用上游设计；Cocos 部分（CCNode/CCSprite 等）已剥离，不依赖任何 Cocos 代码或运行时。
+本工具是从 `ccc-tnt-psd2ui` (https://gitee.com/onvia/ccc-tnt-psd2ui，本仓库现已重构为 `psd2prefab`) 派生出的 Godot 输出版本。PSD 解析、图层规则、`@xxx` 标签解析全部沿用上游设计；Cocos 部分（CCNode/CCSprite 等）已剥离，不依赖任何 Cocos 代码或运行时。

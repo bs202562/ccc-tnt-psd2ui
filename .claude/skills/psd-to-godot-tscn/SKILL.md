@@ -1,11 +1,11 @@
 ---
 name: psd-to-godot-tscn
-description: Convert Photoshop .psd files into Godot 4 .tscn scenes (Control node tree) + .png + .png.import using the godot-psd2tscn standalone CLI. Trigger when the user asks to turn a PSD into a Godot scene/UI, mentions psd2tscn, has a .psd they want to import into a Godot 4 project, or works in a Godot project (project.godot present) and is creating UI from art.
+description: Convert Photoshop .psd files into Godot 4 .tscn scenes (Control node tree) + .png + .png.import using the psd2tscn standalone CLI. Trigger when the user asks to turn a PSD into a Godot scene/UI, mentions psd2tscn, has a .psd they want to import into a Godot 4 project, or works in a Godot project (project.godot present) and is creating UI from art.
 ---
 
 # psd → Godot 4 .tscn
 
-The `godot-psd2tscn/` directory is a self-contained Node CLI (no Cocos / no Godot editor dependency) that walks a PSD's layers and emits a `.tscn` Control-node tree, plus per-layer `.png` and `.png.import` (with stable Godot `uid://`).
+The `psd2tscn/` directory is a self-contained Node CLI (no Cocos / no Godot editor dependency) that walks a PSD's layers and emits a `.tscn` Control-node tree, plus per-layer `.png` and `.png.import` (with stable Godot `uid://`).
 
 Same `@xxx` layer-name vocabulary as the Cocos importer — designed so a single PSD can target both Cocos and Godot.
 
@@ -17,7 +17,7 @@ Same `@xxx` layer-name vocabulary as the Cocos importer — designed so a single
 ## Setup (one-time)
 
 ```bash
-cd godot-psd2tscn
+cd psd2tscn
 npm install   # ag-psd, canvas (native), fs-extra, minimist, pinyin-pro
 ```
 
@@ -26,7 +26,7 @@ npm install   # ag-psd, canvas (native), fs-extra, minimist, pinyin-pro
 ## Invocation
 
 ```bash
-node godot-psd2tscn/psd2tscn.js \
+node psd2tscn/psd2tscn.js \
   --input <path-to-psd-or-dir> \
   --output <godot-project>/ui \
   --godot-project <godot-project> \
@@ -34,7 +34,7 @@ node godot-psd2tscn/psd2tscn.js \
   --pinyin
 ```
 
-Or use the wrapper: `godot-psd2tscn/command.bat` / `command.sh`.
+Or use the wrapper: `psd2tscn/command.bat` / `command.sh`.
 
 ### Flags
 
@@ -50,7 +50,7 @@ Or use the wrapper: `godot-psd2tscn/command.bat` / `command.sh`.
 | `--pinyin` `-py` |  | **Recommended.** Convert Chinese layer names to pinyin so `res://` paths stay ASCII |
 | `--img-only` |  | Slice images only, no `.tscn` |
 | `--godot-font-path` `-gf` |  | `res://fonts/MyFont.ttf` — sets the default Label font (`theme_override_fonts/font`). Requires Godot has already imported that ttf |
-| `--config` |  | `psd.config.json` for default font / text Y offset / etc. (see godot-psd2tscn/README.md) |
+| `--config` |  | `psd.config.json` for default font / text Y offset / etc. (see psd2tscn/README.md) |
 
 ## Recommended workflow
 
@@ -58,12 +58,12 @@ First time on a project:
 
 ```bash
 # 1. Seed cache from existing project assets (optional but avoids duplicate uids)
-node godot-psd2tscn/psd2tscn.js --init \
+node psd2tscn/psd2tscn.js --init \
   --godot-project /path/to/godot-project \
   --cache /path/to/godot-project/.psd2tscn-cache.json
 
 # 2. Real conversion
-node godot-psd2tscn/psd2tscn.js \
+node psd2tscn/psd2tscn.js \
   --input ./screen-login.psd \
   --output /path/to/godot-project/ui \
   --godot-project /path/to/godot-project \
@@ -140,8 +140,8 @@ Either way, the `.ttf` must already have a `.import` (open Godot once after addi
 
 ## Common gotchas
 
-- **`canvas` native build failures** → install the platform's C++ toolchain. See godot-psd2tscn/README.md "一次性安装" section.
-- **`Cannot find module 'ag-psd'`** → didn't run `npm install` inside `godot-psd2tscn/`, or cwd is wrong.
+- **`canvas` native build failures** → install the platform's C++ toolchain. See psd2tscn/README.md "一次性安装" section.
+- **`Cannot find module 'ag-psd'`** → didn't run `npm install` inside `psd2tscn/`, or cwd is wrong.
 - **Bilingual layer names with Chinese** → pass `--pinyin`, otherwise `res://` paths break.
 - **`@.9 + @flip` together** → NinePatchRect doesn't support flip. Warn-and-ignore the flip; user has to choose.
 - **`@Btn` on a group** → not auto-mapped; user needs to put `@Btn` on the BG image layer instead.

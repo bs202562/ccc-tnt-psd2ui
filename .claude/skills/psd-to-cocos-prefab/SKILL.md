@@ -7,7 +7,7 @@ description: Convert Photoshop .psd files to Cocos Creator 3.4+ (or 2.4.x) prefa
 
 The `psd2prefab/` directory in this repo is a standalone Node CLI that walks a PSD's layers, splits images by md5, and emits a `.prefab` + per-image `.png` + `.png.meta` set ready for Cocos Creator to import.
 
-It used to be packaged as a Cocos editor plugin (`ccc-tnt-psd2ui-v3.4.+` and `-v2.4.x`). Both plugin shells are gone — this is now a pure CLI, mirroring the structure of `prefab2psd / tscn2psd / godot-psd2tscn`.
+It used to be packaged as a Cocos editor plugin (`ccc-tnt-psd2ui-v3.4.+` and `-v2.4.x`). Both plugin shells are gone — this is now a pure CLI, mirroring the structure of `prefab2psd / tscn2psd / psd2tscn`.
 
 ## When NOT to use this
 
@@ -25,9 +25,9 @@ npm run build   # compile TypeScript → dist/
 
 `canvas` is a native module — needs platform C++ toolchain. See `psd2prefab/README.md` for details.
 
-If a sibling tool (`prefab2psd / tscn2psd / godot-psd2tscn`) already has `node_modules`, you can junction it to skip the `npm install`:
+If a sibling tool (`prefab2psd / tscn2psd / psd2tscn`) already has `node_modules`, you can junction it to skip the `npm install`:
 ```powershell
-cmd /c "mklink /J D:\path\to\psd2prefab\node_modules D:\path\to\godot-psd2tscn\node_modules"
+cmd /c "mklink /J D:\path\to\psd2prefab\node_modules D:\path\to\psd2tscn\node_modules"
 ```
 
 ## Invocation

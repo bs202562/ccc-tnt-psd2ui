@@ -9,7 +9,7 @@
 | --- | --- |
 | [`psd2prefab/`](./psd2prefab) | PSD → Cocos Creator 3.4+（兼容 2.4.x）`.prefab` + `.png` + `.meta` |
 | [`prefab2psd/`](./prefab2psd) | Cocos `.prefab` → PSD（图片嵌入 + sidecar JSON 记录挂载信息） |
-| [`godot-psd2tscn/`](./godot-psd2tscn) | PSD → Godot 4 `.tscn` + `.png` + `.png.import` |
+| [`psd2tscn/`](./psd2tscn) | PSD → Godot 4 `.tscn` + `.png` + `.png.import` |
 | [`tscn2psd/`](./tscn2psd) | Godot `.tscn` → PSD（图片嵌入 + sidecar JSON 记录节点属性） |
 
 > 历史上本仓库提供过 Cocos Creator 编辑器插件（`ccc-tnt-psd2ui-v3.4.+` / `ccc-tnt-psd2ui-v2.4.x`），现已移除，统一改为命令行调用 `psd2prefab/` 这条路径。

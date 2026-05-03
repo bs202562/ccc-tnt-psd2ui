@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // tscn2psd: Godot 4 .tscn 反向导出为 PSD。
-// - 节点树 → PSD 图层；按 godot-psd2tscn 的 @xxx 约定反向编码（@Btn / @.9{...} / @flipX 等）。
+// - 节点树 → PSD 图层；按 psd2tscn 的 @xxx 约定反向编码（@Btn / @.9{...} / @flipX 等）。
 // - 把 Texture2D ExtResource 引用的原始 PNG 像素嵌入到 PSD raster 图层。
 // - 同名 sidecar JSON 完整记录节点类型、所有属性、ext_resource 引用、sub_resource 定义。
 
