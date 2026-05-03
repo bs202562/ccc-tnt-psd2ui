@@ -38,9 +38,8 @@
 Mac 下首次使用需要先安装 `canvas` 所需要的依赖，如果安装错误 请根据 `https://github.com/Automattic/node-canvas` 手动安装
 
 **安装步骤**:
-1. 确保已安装 Node.js 22.x（可使用 nvm 管理版本：`nvm install 22`）
-2. 下载 Node.js 22 的 darwin 可执行文件放入 `bin/node`，或者系统已安装 Node 22 会自动使用系统版本
-3. 在插件目录下执行 `npm install` 安装依赖
+1. 确保已安装 Node.js 22.x（可使用 nvm 管理版本：`nvm install 22`）。`command.bat` / `command.sh` 都会自动使用系统 `node`，已不再随仓库分发内置 node 二进制
+2. 在插件目录下执行 `npm install` 安装依赖
 
 如果出现 `Bad CPU type in executable canvas` 的报错，按照下面步骤进行处理：
 

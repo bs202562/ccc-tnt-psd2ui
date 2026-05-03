@@ -28,14 +28,14 @@ let cacheFileJson = {};
 function _exec(options, tasks) {
 
     let jsonContent = JSON.stringify(options);
-    if (!fs.existsSync(nodejsFile)) {
-        Editor.log(`[ccc-tnt-psd2ui] 没有内置 nodejs`, nodejsFile);
-
-        return tasks;
+    let hasBuiltinNode = fs.existsSync(nodejsFile);
+    if (!hasBuiltinNode) {
+        // 不再内置 node：command 脚本会回退到系统 node，这里只做日志。
+        Editor.log(`[ccc-tnt-psd2ui] 未发现内置 nodejs，将使用系统 node`);
     }
     // 处理权限问题
     if (Os.platform() === 'darwin') {
-        if (fs.statSync(nodejsFile).mode != 33261) {
+        if (hasBuiltinNode && fs.statSync(nodejsFile).mode != 33261) {
             Editor.log(`[ccc-tnt-psd2ui] nodejsFile 设置权限`);
             fs.chmodSync(nodejsFile, 33261);
         }

@@ -151,13 +151,14 @@ exports.methods = {
 };
 function _exec(options, tasks) {
     let jsonContent = JSON.stringify(options);
-    if (!fs_extra_1.default.existsSync(nodejsFile)) {
-        console.log(`[ccc-tnt-psd2ui] 没有内置 nodejs`, nodejsFile);
-        return tasks;
+    let hasBuiltinNode = fs_extra_1.default.existsSync(nodejsFile);
+    if (!hasBuiltinNode) {
+        // 不再内置 node：command 脚本会回退到系统 node，这里只是日志告知。
+        console.log(`[ccc-tnt-psd2ui] 未发现内置 nodejs，将使用系统 node`);
     }
     // 处理权限问题
     if (os_1.default.platform() === 'darwin') {
-        if (fs_extra_1.default.statSync(nodejsFile).mode != 33261) {
+        if (hasBuiltinNode && fs_extra_1.default.statSync(nodejsFile).mode != 33261) {
             console.log(`[ccc-tnt-psd2ui] 设置权限`);
             fs_extra_1.default.chmodSync(nodejsFile, 33261);
         }
