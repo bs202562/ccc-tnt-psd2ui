@@ -109,6 +109,43 @@ module.exports = Editor.Panel.define({
                         this.isProcessing = true;
                         await Editor.Message.request("ccc-tnt-psd2ui", "on-drop-file", { output: this.outputPath, files, isForceImg: this.isForceImg, isImgOnly: this.isImgOnly, isPinyin: this.isPinyin });
                         this.isProcessing = false;
+                    },
+                    async onClickDropPrefab(event) {
+                        if (this.isProcessing) {
+                            Editor.Dialog.warn("当前有正在处理的文件，请等待完成。\n如果已完成，请关闭 DOS 窗口。");
+                            return;
+                        }
+                        let result = await Editor.Dialog.select({
+                            'multi': true,
+                            'type': "file",
+                            'filters': [
+                                {
+                                    'extensions': ["prefab"],
+                                    'name': "请选择 Prefab"
+                                }
+                            ]
+                        });
+                        let files = result.filePaths;
+                        this.processPrefab(files);
+                    },
+                    async onDropPrefabFiles(event) {
+                        let files = [];
+                        [].forEach.call(event.dataTransfer.files, function (file) {
+                            files.push(file.path);
+                        }, false);
+                        this.processPrefab(files);
+                    },
+                    async processPrefab(files) {
+                        if (!files.length) {
+                            return;
+                        }
+                        if (this.isProcessing) {
+                            Editor.Dialog.warn("当前有正在处理的文件，请等待完成。\n如果已完成，请关闭 DOS 窗口。");
+                            return;
+                        }
+                        this.isProcessing = true;
+                        await Editor.Message.request("ccc-tnt-psd2ui", "on-drop-prefab", { output: this.outputPath, files });
+                        this.isProcessing = false;
                     }
                 },
             });

@@ -12,7 +12,7 @@ const os_1 = __importDefault(require("os"));
 const child_process_1 = __importDefault(require("child_process"));
 const updater_1 = require("./updater");
 let exec = child_process_1.default.exec;
-const ENGINE_VER = "v342"; // 
+const ENGINE_VER = "v342"; //
 const pluginPath = path_1.default.join(Editor.Project.path, "extensions", package_json_1.default.name);
 const projectAssets = path_1.default.join(Editor.Project.path, "assets");
 const cacheFile = path_1.default.join(Editor.Project.path, "local", "psd-to-prefab-cache.json");
@@ -21,6 +21,22 @@ const nodejsFile = path_1.default.join(pluginPath, "bin", `node${os_1.default.pl
 const commandFile = path_1.default.join(pluginPath, "libs", "psd2ui", `command.${os_1.default.platform() == 'darwin' ? "sh" : "bat"}`);
 const psdCore = path_1.default.join(pluginPath, "libs", "psd2ui", "index.js");
 const packagePath = path_1.default.join(pluginPath, "package.json");
+// prefab2psd 工具（独立 CLI，目录可被 PREFAB2PSD_DIR 环境变量覆盖；
+// 默认依次寻找：插件内 libs/prefab2psd → 插件父目录的 prefab2psd）
+const prefab2psdDir = (function () {
+    if (process.env.PREFAB2PSD_DIR && fs_extra_1.default.existsSync(process.env.PREFAB2PSD_DIR)) {
+        return process.env.PREFAB2PSD_DIR;
+    }
+    let candidates = [
+        path_1.default.join(pluginPath, "libs", "prefab2psd"),
+        path_1.default.join(pluginPath, "..", "..", "prefab2psd"),
+    ];
+    for (let i = 0; i < candidates.length; i++) {
+        if (fs_extra_1.default.existsSync(candidates[i])) return candidates[i];
+    }
+    return candidates[0];
+})();
+const prefab2psdCommand = path_1.default.join(prefab2psdDir, `command.${os_1.default.platform() == 'darwin' ? "sh" : "bat"}`);
 let uuid2md5 = new Map();
 let cacheFileJson = {};
 /**
@@ -97,6 +113,41 @@ exports.methods = {
         }).finally(() => {
         });
     },
+    async onPrefab2PsdDropFiles(param) {
+        let files = param.files;
+        let output = param.output;
+        if (!fs_extra_1.default.existsSync(prefab2psdCommand)) {
+            console.error(`[prefab2psd] 找不到 prefab2psd 工具: ${prefab2psdCommand}`);
+            console.error(`[prefab2psd] 请把 prefab2psd 目录放到插件目录下的 libs/prefab2psd，` +
+                `或与插件目录同级，或通过环境变量 PREFAB2PSD_DIR 指定路径。`);
+            return;
+        }
+        let tasks = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            let stat = fs_extra_1.default.statSync(file);
+            if (stat.isFile() && path_1.default.extname(file) !== '.prefab') {
+                continue;
+            }
+            let args = {
+                "input": file,
+                "project-assets": projectAssets,
+                "cache": cacheFile,
+            };
+            if (output) {
+                args["output"] = output;
+            }
+            _execExternal(prefab2psdCommand, args, tasks);
+        }
+        Promise.all(tasks).then(() => {
+            if (tasks.length) {
+                genUUID2MD5Mapping(); // sidecar 写入的缓存可能命中已有 md5 → uuid，刷新映射
+                console.log("[ccc-tnt-psd2ui]  prefab → psd 导出完成，输出位置为：", output ? output : "prefab 同级目录");
+            }
+        }).catch((reason) => {
+            console.log("[ccc-tnt-psd2ui]  prefab → psd 导出失败", reason);
+        });
+    },
 };
 function _exec(options, tasks) {
     let jsonContent = JSON.stringify(options);
@@ -128,6 +179,41 @@ function _exec(options, tasks) {
             if (stderr) {
                 console.log(stderr);
             }
+            rs();
+        });
+    }));
+    return tasks;
+}
+/**
+ * 通用：以子进程方式调起任意 command 脚本（不依赖插件内置 nodejs）。
+ * 用于 prefab2psd 等独立 CLI 工具。
+ */
+function _execExternal(commandFilePath, options, tasks) {
+    if (!fs_extra_1.default.existsSync(commandFilePath)) {
+        console.error(`[ccc-tnt-psd2ui] command 不存在: ${commandFilePath}`);
+        return tasks;
+    }
+    if (os_1.default.platform() === 'darwin') {
+        try {
+            if (fs_extra_1.default.statSync(commandFilePath).mode != 33261) {
+                fs_extra_1.default.chmodSync(commandFilePath, 33261);
+            }
+        }
+        catch (_) { }
+    }
+    let jsonContent = JSON.stringify(options);
+    console.log(`[ccc-tnt-psd2ui] 外部命令参数：${jsonContent}`);
+    let base64 = Buffer.from(jsonContent).toString("base64");
+    tasks.push(new Promise((rs) => {
+        let scriptArgs = `--json ${base64}`;
+        let command = os_1.default.platform() == 'darwin'
+            ? `osascript -e 'tell app "Terminal" to do script "cd ${process.cwd()}; ${commandFilePath} ${scriptArgs}"'`
+            : `start "" "${commandFilePath}" ${scriptArgs}`;
+        exec(command, (error, stdout, stderr) => {
+            if (stdout)
+                console.log(`[ccc-tnt-psd2ui]:\n`, stdout);
+            if (stderr)
+                console.log(stderr);
             rs();
         });
     }));

@@ -63,6 +63,11 @@
                 "methods": [
                     "onPsd2UIDropFiles"
                 ]
+            },
+            "on-drop-prefab": {
+                "methods": [
+                    "onPrefab2PsdDropFiles"
+                ]
             }
         }
     },

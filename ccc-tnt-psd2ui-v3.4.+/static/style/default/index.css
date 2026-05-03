@@ -24,13 +24,23 @@ template {
     height: 70%;
     margin-bottom: auto;
     flex-direction: row;
+    display: flex;
+    gap: 8px;
+}
+
+.drop-col {
+    flex: 1;
+    display: flex;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 #btn-cache {
     margin: auto;
 }
 
-#drop-area {
+#drop-area,
+#drop-area-prefab {
     height: 100%;
     width: 100%;
     box-sizing: border-box;
@@ -47,12 +57,18 @@ template {
     border: 5px dotted #666;
 
     color: #888;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     margin: auto;
 }
 
-#drop-area[drag-hovering] {
+#drop-area-prefab {
+    border-color: #5c7a8a;
+    color: #9ab;
+}
+
+#drop-area[drag-hovering],
+#drop-area-prefab[drag-hovering] {
     border-color: #090;
     color: #090;
 }
