@@ -9,7 +9,7 @@ The `prefab2psd/` directory in this repo is a self-contained Node CLI that walks
 
 1. `<name>.psd` — the PSD file
 2. `<name>.psd.psd2ui.json` — sidecar with full mount info (every component's serialized props, asset uuids, custom-script data)
-3. Updates `<cocos-project>/local/psd-to-prefab-cache.json` with **predicted md5 → spriteFrameUuid** entries so a subsequent psd→prefab import via `ccc-tnt-psd2ui` skips re-exporting unchanged images.
+3. Updates `<cocos-project>/local/psd-to-prefab-cache.json` with **predicted md5 → spriteFrameUuid** entries so a subsequent psd→prefab import via `psd2prefab` skips re-exporting unchanged images.
 
 It's the reverse companion of `psd-to-cocos-prefab`. Designed to round-trip via the existing importer's md5-keyed cache — no importer changes needed.
 
@@ -56,7 +56,7 @@ Or use the wrapper: `prefab2psd/command.bat` (Windows) / `command.sh` (mac/linux
 | `--output` |  | PSD output dir; defaults to the prefab's own directory |
 | `--cache` |  | `local/psd-to-prefab-cache.json` path. **Pass this when the user wants the round-trip-skip behavior.** Without it, the PSDs will still re-import correctly but every image will be re-exported. |
 
-The CLI also accepts `--json <base64>` (same convention as `ccc-tnt-psd2ui`'s editor wiring).
+The CLI also accepts `--json <base64>` (base64-encoded JSON of all args, convenience for upstream tooling).
 
 ## How the round-trip cache works
 
@@ -122,10 +122,6 @@ Anything **not** in the table — `cc.Layout`, `cc.Widget`, `cc.Mask`, `cc.Scrol
 ```
 
 Stable IDs are the node's path from root (with `#N` suffix to disambiguate sibling collisions).
-
-## Editor wiring
-
-The `ccc-tnt-psd2ui` plugin's panel has a second drop area labeled "拖入 prefab" that calls this CLI via the `on-drop-prefab` editor message. Plugin's `dist/main.js` searches for the CLI at `$PREFAB2PSD_DIR` → `<plugin>/libs/prefab2psd` → `<plugin>/../../prefab2psd`. To deploy: copy or junction `prefab2psd/` into `<plugin>/libs/prefab2psd`, or set the env var.
 
 ## Known limits (v0.1)
 

@@ -1,63 +1,37 @@
 
-# psd转预制体
+# psd ↔ UI 工具集
 
 > **Node.js 版本要求**: >= 18.12.0 或 >= 20.9.0 (推荐 22.x LTS)
 
-### 介绍
-将 psd 转为可以直接在 cocos 中使用的预制体，并导出图片资源。  
-前提是需要在 Photoshop 中根据文档做好图层的处理。  
-美术同学把效果做好，我们只需要调整一下图层就可以了。  
-大大提升了预制体制作的效率  
+本仓库提供 4 个**纯命令行**工具，覆盖 PSD ↔ 引擎 UI 的双向转换：
 
-插件文件夹提供了一个能够正确导出为预制体的的 psd 文件可以作为参考  `test\demo.psd` 
+| 工具 | 作用 |
+| --- | --- |
+| [`psd2prefab/`](./psd2prefab) | PSD → Cocos Creator 3.4+（兼容 2.4.x）`.prefab` + `.png` + `.meta` |
+| [`prefab2psd/`](./prefab2psd) | Cocos `.prefab` → PSD（图片嵌入 + sidecar JSON 记录挂载信息） |
+| [`godot-psd2tscn/`](./godot-psd2tscn) | PSD → Godot 4 `.tscn` + `.png` + `.png.import` |
+| [`tscn2psd/`](./tscn2psd) | Godot `.tscn` → PSD（图片嵌入 + sidecar JSON 记录节点属性） |
 
-支持的 CocosCreator 版本：`2.4.x`、 `3.4.+` ，截止到目前可以支持到 `3.7.x`  
-如果无法拖放 psd 文件或文件夹，可能是 CocosCreator 的权限不够，尝试使用管理员方式打开 CocosCreator 或者使用 打开文件 功能
+> 历史上本仓库提供过 Cocos Creator 编辑器插件（`ccc-tnt-psd2ui-v3.4.+` / `ccc-tnt-psd2ui-v2.4.x`），现已移除，统一改为命令行调用 `psd2prefab/` 这条路径。
 
+### 通用安装
 
-### 工具特性
-相同的图像只会导出一张图片  
-如果是相同的图像但是大小不同，则可以使用 `bind` 功能进行绑定，具体使用可以字段说明和示例文件  
-如果是相同的图像但是旋转角度不同，则会导出多张旋转角度不同的图片，需要手动去 Cocos 中处理旋转
+每个子工具都是独立的 Node CLI，安装方式一致：
 
-工具在导出资源的时候会将图片的 MD5 值写入到缓存文件，当其他 psd 有相同 MD5 值的图片时，不再导出图片  
-工具在首次使用时会自动执行一次缓存项目所有资源 MD5 值  
-美术导出的图片 MD5 值可能与本工具导出的图片 MD5 值不一致，所以当出现相同的图片时请考虑这种情况
+```bash
+cd <工具目录>
+npm install
+npm run build      # 仅 psd2prefab/ 需要（需要先编译 TypeScript）
+```
 
-### 特别注意
-工具只适用于新界面的首次导出，如果界面已经开发到一定程度，但是因需求变化，界面结构发生变化，想重新导出，需要谨慎使用。
-如果导出之后缺少某些图片，请确认是否写入了缓存，写入缓存的不会重新导出。  
-如果出现资源丢失的情况，请确认在项目中是否被手动删除了。  
-不建议将输出目录设置为 项目的 `assets` 文件夹下，可能由于编辑器的权限导致不可预期的错误。
+`canvas` 是 native 模块，依赖系统 C++ 工具链：
+- Mac：Xcode CLT（如出现 `Bad CPU type in executable canvas` 报错，重装 canvas：`npm uninstall canvas && npm i canvas@^3.2.1`）
+- Windows：Visual Studio Build Tools（C++ workload）
+- Linux：`build-essential` + cairo / pango / libjpeg / giflib / librsvg dev headers
 
+具体用法 / 参数 / 输出结构请进各自子目录的 README。
 
-### Mac 用户请注意！！！！
-
-**Node.js 版本要求**: 本工具需要 Node.js >= 18.12.0 或 >= 20.9.0，推荐使用 Node.js 22.x LTS 版本。
-
-Mac 下首次使用需要先安装 `canvas` 所需要的依赖，如果安装错误 请根据 `https://github.com/Automattic/node-canvas` 手动安装
-
-**安装步骤**:
-1. 确保已安装 Node.js 22.x（可使用 nvm 管理版本：`nvm install 22`）。`command.bat` / `command.sh` 都会自动使用系统 `node`，已不再随仓库分发内置 node 二进制
-2. 在插件目录下执行 `npm install` 安装依赖
-
-如果出现 `Bad CPU type in executable canvas` 的报错，按照下面步骤进行处理：
-
-1. 卸载 canvas：`npm uninstall canvas`
-2. 重新安装 canvas：`npm i canvas@^3.2.1`
-
-
-
-#### 界面说明
-
-![img1](./readme-img/img1.png)
-
-1. 缓存资源按钮： 手动缓存资源MD5，当你不确定资源是否完全缓存的时候可以执行
-2. 强制导出图片选项： 勾选后，即使已经进行缓存的资源同样会导出图片
-3. 只导出图片选项： 可以把此工具只当做是切图工具，同时会将文本图层的字号及颜色输出到文件
-4. 中文转拼音：最终导出无论是图片名还是节点名如果包含中文，都会转成拼音。
-5. 输出路径输入框： 可以直接导出到指定路径，如果没有填写，默认为 psd 同级目录
-6. 红框区域：拖入 psd 文件夹或 psd 文件，也可以点击红框区域使用选择文件功能
+下面的图层名约定（`@xxx`）四个工具共用 —— 这是从 PSD 端约定一套节点元数据，让 PSD 与 Cocos / Godot 都能解释。
 
 ### 属性
 
@@ -320,7 +294,7 @@ flip 的变种 y 方向镜像图像vv
 
 
 ### 程序配置
-如果想对指定组件进行统一定制，可以修改 `psd2ui/config/psd.config.json` 文件  
+如果想对指定组件进行统一定制，准备一份 `psd.config.json` 并在调用 `psd2prefab` 时通过 `--config <路径>` 传入。
 key 为组件名，val 为 预制体参数，你可以对任意组件的任意属性进行定制
 
 例如当你想在导出时默认使用指定字体：

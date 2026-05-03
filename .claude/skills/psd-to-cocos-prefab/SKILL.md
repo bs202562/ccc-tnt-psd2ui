@@ -1,36 +1,47 @@
 ---
 name: psd-to-cocos-prefab
-description: Convert Photoshop .psd files to Cocos Creator 3.4+ prefab + .png + .meta using the ccc-tnt-psd2ui plugin's bundled CLI. Trigger when the user asks to turn a PSD into a Cocos prefab/UI, mentions ccc-tnt-psd2ui / psd2ui / psd2prefab, has a .psd they want to import into a Cocos project, or works in a directory containing the ccc-tnt-psd2ui-v3.4.+ plugin.
+description: Convert Photoshop .psd files to Cocos Creator 3.4+ (or 2.4.x) prefab + .png + .meta using the standalone psd2prefab Node CLI. Trigger when the user asks to turn a PSD into a Cocos prefab/UI, mentions psd2prefab / psd2ui / ccc-tnt-psd2ui (legacy plugin name), or has a .psd they want to import into a Cocos project.
 ---
 
-# psd → Cocos Creator 3.4+ prefab
+# psd → Cocos Creator prefab
 
-The `ccc-tnt-psd2ui` plugin has a CLI bundle at `ccc-tnt-psd2ui-v3.4.+/libs/psd2ui/index.js` that walks a PSD's layers, splits images, and emits a `.prefab` + `.png` + `.png.meta` set ready for Cocos Creator to import.
+The `psd2prefab/` directory in this repo is a standalone Node CLI that walks a PSD's layers, splits images by md5, and emits a `.prefab` + per-image `.png` + `.png.meta` set ready for Cocos Creator to import.
 
-It's the same code the editor panel calls when the user drops a PSD into the drop area; running it directly skips the editor.
+It used to be packaged as a Cocos editor plugin (`ccc-tnt-psd2ui-v3.4.+` and `-v2.4.x`). Both plugin shells are gone — this is now a pure CLI, mirroring the structure of `prefab2psd / tscn2psd / godot-psd2tscn`.
 
 ## When NOT to use this
 
 - The user wants a Godot scene → use `psd-to-godot-tscn`.
-- The user wants the reverse direction (prefab → psd) → use `cocos-prefab-to-psd`.
-- The PSD has no `@xxx` layer-name tags AND no clean group structure → the output may be garbage. Tell the user to follow the README's layer-name conventions first.
+- The reverse direction (`.prefab` → PSD) → use `cocos-prefab-to-psd`.
+- The PSD has no `@xxx` layer-name tags AND no clean group structure → output may be garbage. Tell the user to follow the README's layer-name conventions first.
+
+## Setup (one-time)
+
+```bash
+cd psd2prefab
+npm install
+npm run build   # compile TypeScript → dist/
+```
+
+`canvas` is a native module — needs platform C++ toolchain. See `psd2prefab/README.md` for details.
+
+If a sibling tool (`prefab2psd / tscn2psd / godot-psd2tscn`) already has `node_modules`, you can junction it to skip the `npm install`:
+```powershell
+cmd /c "mklink /J D:\path\to\psd2prefab\node_modules D:\path\to\godot-psd2tscn\node_modules"
+```
 
 ## Invocation
 
-The CLI must be run with the plugin's bundled Node (used to be `bin/node.exe`, recently bumped to system Node 22). The convenience wrapper is `libs/psd2ui/command.bat` (Windows) or `command.sh` (mac/linux). Use the wrapper unless you need to override the Node binary.
-
 ```bash
-# Direct invocation (preferred when scripting)
-node ccc-tnt-psd2ui-v3.4.+/libs/psd2ui/index.js \
-  --input <path-to-psd-or-dir> \
+node psd2prefab/dist/index.js \
+  --input <psd file or dir> \
   --project-assets <cocos-project>/assets \
   --cache <cocos-project>/local/psd-to-prefab-cache.json \
   --engine-version v342 \
   --pinyin
-
-# Via the convenience wrapper
-ccc-tnt-psd2ui-v3.4.+/libs/psd2ui/command.bat --input ./your.psd --project-assets ./assets --cache ./local/psd-to-prefab-cache.json --engine-version v342 --pinyin
 ```
+
+Wrapper: `psd2prefab/command.bat` (Windows) / `command.sh` (mac/linux). They check `node_modules` and `dist/` exist, then `node dist/index.js "$@"`.
 
 ### Flags
 
@@ -38,20 +49,20 @@ ccc-tnt-psd2ui-v3.4.+/libs/psd2ui/command.bat --input ./your.psd --project-asset
 | --- | --- | --- |
 | `--input` | yes | `.psd` file OR directory containing PSDs (recursive) |
 | `--project-assets` | yes | Cocos project's `assets/` dir; outputs land here unless `--output` given |
-| `--cache` | yes | `local/psd-to-prefab-cache.json` — md5→spriteFrameUuid cache, makes re-imports skip same-image re-export |
-| `--engine-version` | yes | `v342` for Cocos 3.4+ (the only supported one in this build); `v249` for legacy 2.4.x |
+| `--cache` |  | `local/psd-to-prefab-cache.json` — md5→spriteFrameUuid cache, makes re-imports skip same-image re-export |
+| `--engine-version` |  | `v342` for Cocos 3.4+ (default), `v249` for Cocos 2.4.x |
 | `--output` |  | Override output dir; defaults to `<psd-dir>` |
 | `--pinyin` |  | Strongly recommended — converts Chinese layer names to pinyin so node names / file paths are ASCII |
 | `--force-img` |  | Re-export images even if md5 already cached |
-| `--img-only` |  | Slice images only, do not generate `.prefab` (useful as an export-only mode) |
+| `--img-only` |  | Slice images only, do not generate `.prefab` (export-only mode) |
 | `--config` |  | Path to `psd.config.json` (text Y offset tuning, default font, etc.) |
 | `--init` |  | Just scan `--project-assets` to seed the cache; no PSD conversion |
 
-The CLI also accepts `--json <base64>` where the base64-decoded JSON is the args object — that's how the editor's `dist/main.js` invokes it. You don't need this when calling directly.
+CLI also accepts `--json <base64>` where the base64-decoded JSON is the args object — convenience for upstream tooling.
 
-## Layer-name conventions the plugin understands
+## Layer-name conventions
 
-(Fully documented in `ccc-tnt-psd2ui-v3.4.+/README.md`.)
+(Fully documented in the root `README.md`.)
 
 | Tag | Purpose |
 | --- | --- |
@@ -69,7 +80,7 @@ Multiple tags can stack on one layer: `<name>@Btn@ar{x:1,y:1}@.9{l:8,r:8,t:8,b:8
 
 ## Outputs
 
-For a PSD `MyUI.psd` with layers `Bg / OkBtn / Label`, the plugin writes (relative to `--output` or `<psd-dir>`):
+For a PSD `MyUI.psd`, output relative to `--output` (or `<psd-dir>`):
 
 ```
 MyUI/
@@ -80,7 +91,7 @@ MyUI/
     <md5>.png.meta
 ```
 
-The `.meta` files contain stable Cocos uuids derived per-PSD; they're idempotent across runs.
+The `.meta` files contain stable Cocos uuids derived per-PSD; idempotent across runs.
 
 ## md5 cache
 
@@ -97,11 +108,8 @@ On every run the importer recomputes md5 of each layer's pixels; if the md5 is a
 ## Common gotchas
 
 - **CocosCreator must be closed (or the assets reloaded)** when overwriting prefabs/PNGs in `assets/` — the editor caches them.
-- **`--engine-version v342`** is required; without it the CLI falls back to a default that may not match the editor's expectations. The plugin's editor-side handler always passes `v342`.
-- **The CLI bundle is auto-updated** by `dist/updater.js` from the upstream repo. If a future user reports the bundle is different from this version, they may have a newer one — check `ccc-tnt-psd2ui-v3.4.+/libs/psd2ui/index.js` first, don't assume.
-- **Output dir must NOT be inside `<cocos-project>/assets`** if you're writing while the editor is open — Cocos may grab the file mid-write. The README explicitly warns about this.
+- **`--engine-version v342`** is the default; pass `v249` only for legacy Cocos 2.4.x projects.
+- **Output dir must NOT be inside `<cocos-project>/assets`** if you're writing while the editor is open — Cocos may grab the file mid-write.
 - **First run on a project should be `--init` only** to seed the md5 cache from existing project PNGs; then run real conversions.
-
-## Editor wiring
-
-In a Cocos project that has the plugin installed, the user can also invoke it via the panel: `菜单/扩展/psd转预制体` opens a window with a drop area. That panel calls the same CLI under the hood. There's no need to use the panel from the AI's side — direct CLI calls are easier to script.
+- **Build step required**: `npm run build` produces `dist/index.js`. If you cloned fresh and skipped this, the CLI complains.
+- **TypeScript source lives in `psd2prefab/src/`**, build output in `psd2prefab/dist/`. Both tracked in git so users can run `node dist/index.js` immediately after `npm install`. If you edit `src/`, run `npm run build` (or `npm run watch`) before re-testing.

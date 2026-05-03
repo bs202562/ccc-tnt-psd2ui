@@ -6,8 +6,7 @@ Cocos Creator **3.4+** prefab 反向导出 PSD 工具。
 完整记录节点上的引擎组件、自定义脚本、资源 uuid 等挂载信息，
 方便后续把 PSD 再导回 prefab 时尽量恢复原貌。
 
-> 与 [`ccc-tnt-psd2ui`](../ccc-tnt-psd2ui-v3.4.+) 插件零耦合，独立 Node CLI，
-> 也可以在插件面板里用 “Prefab → PSD” 拖入区调用。
+> 与 [`psd2prefab`](../psd2prefab) 是反向兄弟工具，独立 Node CLI，纯命令行使用。
 
 ---
 
@@ -22,7 +21,7 @@ Cocos Creator **3.4+** prefab 反向导出 PSD 工具。
 
 如果传了 `--cache <psd-to-prefab-cache.json>`，
 工具会把 `md5(嵌入图片) → spriteFrameUuid` 写进该缓存，
-下次再用 `ccc-tnt-psd2ui` 把这张 PSD 导回 prefab 时
+下次再用 `psd2prefab` 把这张 PSD 导回 prefab 时
 就会命中缓存、跳过同图重复导出。
 
 ---
@@ -58,7 +57,7 @@ Windows 双击 `command.bat`、Mac/Linux 执行 `command.sh` 也能调起。
 
 ## 图层名编码
 
-复用 `ccc-tnt-psd2ui` 已有的 `@xxx` 约定，让生成的 PSD 用插件原本的 PSD→prefab
+复用 `psd2prefab` 已有的 `@xxx` 约定，让生成的 PSD 用 `psd2prefab` 原本的 PSD→prefab
 路径就能基本还原：
 
 | Cocos 节点 / 组件 | PSD 图层 |
@@ -134,4 +133,4 @@ Windows 双击 `command.bat`、Mac/Linux 执行 `command.sh` 也能调起。
 - `cc.Label` 在 PSD 中只放一个透明占位层，文本内容、字体、颜色等在 sidecar 里。
 - 嵌套 prefab 实例（PrefabInstance）按当前已展开的状态导出，恢复时需要 sidecar 配合。
 - sidecar 还没有被 importer 消费 —— 自定义组件 / 事件回调 / 资源引用的恢复需要后续在
-  `ccc-tnt-psd2ui` 插件中接入读取逻辑。
+  `psd2prefab` 中接入读取逻辑。
