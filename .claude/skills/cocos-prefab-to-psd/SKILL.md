@@ -20,20 +20,16 @@ It's the reverse companion of `psd-to-cocos-prefab`. Designed to round-trip via 
 
 ## Setup (one-time)
 
+The repo is an npm workspace. Run **one** install at the repo root, all 4 sibling tools share the same `node_modules/`:
+
 ```bash
-cd prefab2psd
-npm install   # pulls ag-psd, canvas (native), fs-extra, minimist
+cd <repo-root>
+npm install   # installs ag-psd, canvas, fs-extra, minimist, pinyin-pro for all 4 tools
 ```
+
+Sub-tool dirs do NOT get their own `node_modules/` after this — Node walks up to the root one when running e.g. `node prefab2psd/prefab2psd.js`.
 
 `canvas` is a native module. Windows needs Visual Studio Build Tools (C++ workload), Mac needs Xcode CLT, Linux needs `build-essential` + cairo/pango/libjpeg/giflib/librsvg dev headers. If `npm install` fails on `canvas`, the build env is the issue.
-
-A Windows trick: if you're working in this repo and `prefab2psd/node_modules` doesn't exist, you can junction it from a sibling tool that already has it:
-
-```powershell
-cmd /c "mklink /J D:\path\to\prefab2psd\node_modules D:\path\to\psd2tscn\node_modules"
-```
-
-(Same deps; saves a `npm install`.)
 
 ## Invocation
 

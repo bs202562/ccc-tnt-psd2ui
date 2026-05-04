@@ -10,6 +10,12 @@ Cocos Creator **3.4+** prefab 反向导出 PSD 工具。
 
 ---
 
+## 安装
+
+仓库根目录是 npm workspace，**只在根跑一次** `npm install` 即可（4 个工具共用根 `node_modules/`）。详情见根 `README.md` 的"一次性安装"章节。
+
+---
+
 ## 输出物
 
 对每个 `MyUI.prefab`，在 `--output`（缺省与 prefab 同级）下生成：

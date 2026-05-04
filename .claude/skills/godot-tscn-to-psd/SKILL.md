@@ -19,18 +19,14 @@ It's the reverse of `psd-to-godot-tscn`. PSD → tscn → PSD round-trips visual
 
 ## Setup (one-time)
 
+The repo is an npm workspace. Run **one** install at the repo root, all 4 sibling tools share the same `node_modules/`:
+
 ```bash
-cd tscn2psd
-npm install   # ag-psd, canvas (native), fs-extra, minimist
+cd <repo-root>
+npm install
 ```
 
-If `prefab2psd/node_modules` (or `psd2tscn/node_modules`) already exists, you can junction it:
-
-```powershell
-cmd /c "mklink /J D:\path\to\tscn2psd\node_modules D:\path\to\prefab2psd\node_modules"
-```
-
-(Same dep set; saves a build.)
+Sub-tool dirs do NOT get their own `node_modules/` after this — Node walks up to the root one. `canvas` needs a C++ toolchain (see psd-to-cocos-prefab skill for platform-specific notes).
 
 ## Invocation
 

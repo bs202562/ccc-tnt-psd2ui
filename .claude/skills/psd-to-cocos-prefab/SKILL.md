@@ -17,18 +17,15 @@ It used to be packaged as a Cocos editor plugin (`ccc-tnt-psd2ui-v3.4.+` and `-v
 
 ## Setup (one-time)
 
+The repo is an npm workspace. Run **one** install at the repo root, then `npm run build` once to compile this tool's TypeScript:
+
 ```bash
-cd psd2prefab
-npm install
-npm run build   # compile TypeScript → dist/
+cd <repo-root>
+npm install                 # installs deps for all 4 tools into root node_modules/
+npm run build               # compiles psd2prefab TypeScript → psd2prefab/dist/
 ```
 
-`canvas` is a native module — needs platform C++ toolchain. See `psd2prefab/README.md` for details.
-
-If a sibling tool (`prefab2psd / tscn2psd / psd2tscn`) already has `node_modules`, you can junction it to skip the `npm install`:
-```powershell
-cmd /c "mklink /J D:\path\to\psd2prefab\node_modules D:\path\to\psd2tscn\node_modules"
-```
+Sub-tool dirs do NOT get their own `node_modules/` — Node walks up to the root one when running `node psd2prefab/dist/index.js`. `canvas` is a native module — needs platform C++ toolchain. See `psd2prefab/README.md` for platform-specific notes.
 
 ## Invocation
 

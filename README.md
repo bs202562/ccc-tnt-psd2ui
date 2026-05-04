@@ -14,15 +14,17 @@
 
 > 历史上本仓库提供过 Cocos Creator 编辑器插件（`ccc-tnt-psd2ui-v3.4.+` / `ccc-tnt-psd2ui-v2.4.x`），现已移除，统一改为命令行调用 `psd2prefab/` 这条路径。Cocos 2.4.x 的 prefab 输出仍可用 `psd2prefab --engine-version v249` 生成。
 
-### 通用安装
+### 一次性安装（npm workspaces）
 
-每个子工具都是独立的 Node CLI，安装方式一致：
+仓库根目录是一个 npm workspace，4 个工具共用同一份 `node_modules/`，**只需安装一次**：
 
 ```bash
-cd <工具目录>
-npm install
-npm run build      # 仅 psd2prefab/ 需要（需要先编译 TypeScript）
+cd <repo-root>
+npm install        # 一次装好 4 个工具的依赖
+npm run build      # 编译 psd2prefab 的 TypeScript（其余 3 个无需 build）
 ```
+
+之后想跑哪个工具，直接 `node <工具>/<工具>.js ...` 或在工具目录里跑 `command.bat` / `command.sh` 都可以 —— Node 会自动从根 `node_modules/` 解析依赖。
 
 `canvas` 是 native 模块，依赖系统 C++ 工具链：
 - Mac：Xcode CLT（如出现 `Bad CPU type in executable canvas` 报错，重装 canvas：`npm uninstall canvas && npm i canvas@^3.2.1`）

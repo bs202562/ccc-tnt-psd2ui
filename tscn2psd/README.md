@@ -11,6 +11,12 @@ sidecar JSON 完整记录节点类型、属性、ext_resource / sub_resource 引
 
 ---
 
+## 安装
+
+仓库根目录是 npm workspace，**只在根跑一次** `npm install` 即可（4 个工具共用根 `node_modules/`）。详情见根 `README.md` 的"一次性安装"章节。
+
+---
+
 ## 输出物
 
 对每个 `MyUI.tscn`，在 `--output`（缺省与 tscn 同级）下生成：

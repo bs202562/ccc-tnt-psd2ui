@@ -10,10 +10,12 @@ Photoshop `.psd` → Cocos Creator **3.4+**（向下兼容 2.4.x）`.prefab` + `
 
 **前提**：Node.js 18+（推荐 22 LTS）。
 
+仓库根目录已经把 4 个工具配成 npm workspace，**只在根跑一次** `npm install`：
+
 ```bash
-cd psd2prefab
+cd <repo-root>
 npm install
-npm run build   # 编译 TypeScript → dist/
+npm run build   # 编译本工具的 TypeScript → psd2prefab/dist/（其它 3 个工具无需 build）
 ```
 
 `canvas` 是 native 模块，需要本机 C++ 工具链：

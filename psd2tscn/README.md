@@ -16,14 +16,16 @@ psd2tscn/
 
 ## 一次性安装
 
-**前提**：Node.js 16+。
+**前提**：Node.js 16+（推荐 22 LTS，与同仓库其他工具一致）。
+
+仓库根目录已经把 4 个工具配成 npm workspace，**只在根跑一次** `npm install`：
 
 ```
-cd psd2tscn
+cd <repo-root>
 npm install
 ```
 
-会下载 `ag-psd / canvas / fs-extra / minimist / pinyin-pro` 到 `node_modules/`。`canvas` 是 native 模块，编译要本机有 C++ 工具链：
+会把 `ag-psd / canvas / fs-extra / minimist / pinyin-pro` 等装到根 `node_modules/`。`canvas` 是 native 模块，编译要本机有 C++ 工具链：
 - macOS：一般 Xcode CLT 自带
 - Windows：装 Visual Studio Build Tools（C++ workload）
 - Linux：`build-essential` + `libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev`
@@ -173,7 +175,7 @@ PSD 不嵌入字体，所以 Godot 这边必须有真实的 `.ttf/.otf` 资源�
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `Cannot find module 'ag-psd'` | 没跑 `npm install`，或 cwd 不是本目录。`cd` 进 `psd2tscn/` 再 `npm install` |
+| `Cannot find module 'ag-psd'` | 没在仓库根跑过 `npm install`。先 `cd <repo-root> && npm install`，4 个工具共用根 `node_modules/` |
 | `canvas` 编译失败 | 缺 C++ 工具链。看上文 "一次性安装" 章节 |
 | `输入路径不存在` | `--input` 写错了。Windows 下注意路径分隔符与引号 |
 | Godot 提示 "字体导入文件不存在" | `.ttf` 还没被 Godot import；先在 Godot 里打开项目让它扫一遍 |

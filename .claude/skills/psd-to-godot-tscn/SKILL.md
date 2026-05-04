@@ -16,12 +16,14 @@ Same `@xxx` layer-name vocabulary as the Cocos importer — designed so a single
 
 ## Setup (one-time)
 
+The repo is an npm workspace. Run **one** install at the repo root, all 4 sibling tools share the same `node_modules/`:
+
 ```bash
-cd psd2tscn
-npm install   # ag-psd, canvas (native), fs-extra, minimist, pinyin-pro
+cd <repo-root>
+npm install
 ```
 
-`canvas` needs a C++ toolchain. See its README troubleshooting if `npm install` fails.
+Sub-tool dirs do NOT get their own `node_modules/` after this — Node walks up to root. `canvas` needs a C++ toolchain. See its README troubleshooting if `npm install` fails.
 
 ## Invocation
 
@@ -141,7 +143,7 @@ Either way, the `.ttf` must already have a `.import` (open Godot once after addi
 ## Common gotchas
 
 - **`canvas` native build failures** → install the platform's C++ toolchain. See psd2tscn/README.md "一次性安装" section.
-- **`Cannot find module 'ag-psd'`** → didn't run `npm install` inside `psd2tscn/`, or cwd is wrong.
+- **`Cannot find module 'ag-psd'`** → didn't run `npm install` at the repo root. The repo is an npm workspace; sub-tools rely on root `node_modules/`.
 - **Bilingual layer names with Chinese** → pass `--pinyin`, otherwise `res://` paths break.
 - **`@.9 + @flip` together** → NinePatchRect doesn't support flip. Warn-and-ignore the flip; user has to choose.
 - **`@Btn` on a group** → not auto-mapped; user needs to put `@Btn` on the BG image layer instead.
