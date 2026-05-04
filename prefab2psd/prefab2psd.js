@@ -300,6 +300,38 @@ function buildLayout(prefab) {
     return { rootSize, nodes };
 }
 
+// 检测内容是否越出 root 的 contentSize；如果越出就扩展画布并把所有 rect/originPsd
+// 平移 (padX, padY)。返回最终的 PSD 画布尺寸 + 平移量。
+function fitCanvasToContent(layout) {
+    let rootW = Math.round(layout.rootSize.width);
+    let rootH = Math.round(layout.rootSize.height);
+    let bboxL = 0, bboxT = 0, bboxR = rootW, bboxB = rootH;
+    for (const entry of layout.nodes) {
+        if (entry.parentIdx < 0) continue; // 根节点本身就是画布，不算
+        bboxL = Math.min(bboxL, entry.rect.left);
+        bboxT = Math.min(bboxT, entry.rect.top);
+        bboxR = Math.max(bboxR, entry.rect.right);
+        bboxB = Math.max(bboxB, entry.rect.bottom);
+    }
+    let padX = Math.ceil(Math.max(0, -bboxL));
+    let padY = Math.ceil(Math.max(0, -bboxT));
+    let width = Math.max(1, Math.ceil(bboxR) + padX);
+    let height = Math.max(1, Math.ceil(bboxB) + padY);
+    if (padX || padY) {
+        for (const entry of layout.nodes) {
+            entry.rect.left += padX;
+            entry.rect.right += padX;
+            entry.rect.top += padY;
+            entry.rect.bottom += padY;
+            if (entry.originPsd) {
+                entry.originPsd.x += padX;
+                entry.originPsd.y += padY;
+            }
+        }
+    }
+    return { width, height, padX, padY };
+}
+
 function readContentSize(uiCompEntry) {
     if (!uiCompEntry || !uiCompEntry.obj) return null;
     let s = uiCompEntry.obj._contentSize;
@@ -392,6 +424,17 @@ async function convertPrefab(prefabPath, args, assetIndex) {
 
     let layout = buildLayout(prefab);
 
+    // Cocos UI 节点常会越出根的 contentSize（用于贴边 / 全屏挂件等）。
+    // PSD 画布如果只用根尺寸，越出部分就会被 PS 裁掉。这里算一遍全局 bbox：
+    //  - 左 / 上越界 → 给画布加同等量的 padding，所有图层 rect 同步右 / 下平移
+    //  - 右 / 下越界 → 直接把画布扩到能装下
+    let canvasFit = fitCanvasToContent(layout);
+    if (canvasFit.padX || canvasFit.padY ||
+        canvasFit.width !== Math.round(layout.rootSize.width) ||
+        canvasFit.height !== Math.round(layout.rootSize.height)) {
+        console.log(`[prefab2psd] 内容溢出根尺寸：扩展画布 ${Math.round(layout.rootSize.width)}x${Math.round(layout.rootSize.height)} → ${canvasFit.width}x${canvasFit.height} (左/上 pad=${canvasFit.padX}/${canvasFit.padY})`);
+    }
+
     // 在创建任何要用到自定义字体的 canvas 之前预注册字体
     let fontRegistry = preregisterFonts(prefab, assetIndex);
 
@@ -416,6 +459,10 @@ async function convertPrefab(prefabPath, args, assetIndex) {
             exportedAt: new Date().toISOString(),
         },
         rootSize: layout.rootSize,
+        // PSD 画布的实际尺寸 + 因内容溢出额外加的左/上 padding（rect 已平移过）。
+        // 回导时如需恢复 cocos 原始坐标，把每个 layer 的 left/top 减去 canvasPadding 即可。
+        canvasSize: { width: canvasFit.width, height: canvasFit.height },
+        canvasPadding: { x: canvasFit.padX, y: canvasFit.padY },
         nodes: {},
     };
 
@@ -488,8 +535,8 @@ async function convertPrefab(prefabPath, args, assetIndex) {
     // 按 cocos 顺序追加，正好叠在 bg 之上。
 
     let psd = {
-        width: Math.max(1, Math.round(layout.rootSize.width)),
-        height: Math.max(1, Math.round(layout.rootSize.height)),
+        width: canvasFit.width,
+        height: canvasFit.height,
         children: rootChildren,
     };
 
