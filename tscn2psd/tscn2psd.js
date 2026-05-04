@@ -338,6 +338,35 @@ function buildScene(parsed) {
     };
 }
 
+// 检测内容是否越出根 Control 的 size；越出就扩展画布并把所有 rect 平移 (padX, padY)。
+// Godot UI 与 Cocos 一样常出现贴边/全屏挂件，offset_left 可能为负或 offset_right
+// 大于父尺寸；PSD 画布固定在根尺寸时 PS 会硬切。
+function fitCanvasToContent(layout) {
+    let rootW = Math.round(layout.rootSize.x);
+    let rootH = Math.round(layout.rootSize.y);
+    let bboxL = 0, bboxT = 0, bboxR = rootW, bboxB = rootH;
+    for (const entry of layout.entries) {
+        if (!entry.parentEntry) continue; // 根本身就是画布
+        bboxL = Math.min(bboxL, entry.rect.left);
+        bboxT = Math.min(bboxT, entry.rect.top);
+        bboxR = Math.max(bboxR, entry.rect.right);
+        bboxB = Math.max(bboxB, entry.rect.bottom);
+    }
+    let padX = Math.ceil(Math.max(0, -bboxL));
+    let padY = Math.ceil(Math.max(0, -bboxT));
+    let width = Math.max(1, Math.ceil(bboxR) + padX);
+    let height = Math.max(1, Math.ceil(bboxB) + padY);
+    if (padX || padY) {
+        for (const entry of layout.entries) {
+            entry.rect.left += padX;
+            entry.rect.right += padX;
+            entry.rect.top += padY;
+            entry.rect.bottom += padY;
+        }
+    }
+    return { width, height, padX, padY };
+}
+
 function buildLayout(scene, canvasSizeOverride) {
     if (!scene.nodes.length) throw new Error('tscn 中没有 [node] 段');
     // 根节点：parent 属性缺失
@@ -529,6 +558,14 @@ async function convertTscn(tscnPath, args, projectRoot, projectIndex) {
     let canvasSizeOverride = parseCanvasSize(args['canvas-size']);
     let layout = buildLayout(scene, canvasSizeOverride);
 
+    // 内容越出根尺寸时扩展画布（左/上越界 → 加 padding 并平移；右/下越界 → 直接扩）
+    let canvasFit = fitCanvasToContent(layout);
+    if (canvasFit.padX || canvasFit.padY ||
+        canvasFit.width !== Math.round(layout.rootSize.x) ||
+        canvasFit.height !== Math.round(layout.rootSize.y)) {
+        console.log(`[tscn2psd] 内容溢出根尺寸：扩展画布 ${Math.round(layout.rootSize.x)}x${Math.round(layout.rootSize.y)} → ${canvasFit.width}x${canvasFit.height} (左/上 pad=${canvasFit.padX}/${canvasFit.padY})`);
+    }
+
     // 在创建任何 canvas 之前预注册字体（Label 用）
     let fontRegistry = preregisterFonts(scene, projectRoot);
 
@@ -544,6 +581,10 @@ async function convertTscn(tscnPath, args, projectRoot, projectIndex) {
             exportedAt: new Date().toISOString(),
         },
         rootSize: layout.rootSize,
+        // PSD 实际画布尺寸 + 因内容溢出额外加的左/上 padding（rect 已平移过）。
+        // 回导时 layer.left/top 减去 canvasPadding 就是 Godot 原始坐标。
+        canvasSize: { width: canvasFit.width, height: canvasFit.height },
+        canvasPadding: { x: canvasFit.padX, y: canvasFit.padY },
         extResources: scene.extResources.map(e => ({
             id: e.attrs.id,
             type: e.attrs.type,
@@ -587,8 +628,8 @@ async function convertTscn(tscnPath, args, projectRoot, projectIndex) {
     }
 
     let psd = {
-        width: Math.max(1, Math.round(layout.rootSize.x)),
-        height: Math.max(1, Math.round(layout.rootSize.y)),
+        width: canvasFit.width,
+        height: canvasFit.height,
         children: rootChildren,
     };
 
